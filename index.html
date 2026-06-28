@@ -849,6 +849,8 @@ function clearAllData() {
 // ── INIT ─────────────────────────────────────────────
 buildTabs();
 filter();
+document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key==='L'){e.preventDefault();openLogin();}});
+
 updateSugBadge(loadSuggestions().length);
 </script>
 
