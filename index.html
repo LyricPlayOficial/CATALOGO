@@ -849,8 +849,6 @@ function clearAllData() {
 // ── INIT ─────────────────────────────────────────────
 buildTabs();
 filter();
-document.addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&e.shiftKey&&e.key==='L'){e.preventDefault();openLogin();}});
-
 updateSugBadge(loadSuggestions().length);
 </script>
 
@@ -868,5 +866,6 @@ updateSugBadge(loadSuggestions().length);
     <div class="video-modal-footer" id="videoFooter"></div>
   </div>
 </div>
+<div id="lp-footer" ondblclick="openLogin()" style="text-align:center;padding:24px;font-size:11px;color:#333;cursor:default">© Lyric Play 2025</div>
 </body>
 </html>
