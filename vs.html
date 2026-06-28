@@ -265,7 +265,7 @@ header{position:sticky;top:0;z-index:200;background:rgba(24,27,31,.97);backdrop-
   <button class="page-tab" onclick="switchPage('suggest',this)">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
     Sugerir Música
-    <span class="badge" id="sugBadge" style="display:none">0</span>
+    
   </button>
 </div>
 
@@ -403,7 +403,7 @@ header{position:sticky;top:0;z-index:200;background:rgba(24,27,31,.97);backdrop-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 const WHATSAPP = '5551996768711';
-const ADMIN_PWD = 'lyricplay2025';
+const ADMIN_PWD = 'LP@2025#slide!';
 const STORAGE_KEY = 'lyricplay_vs_suggestions';
 
 const igLinks = {};
@@ -649,7 +649,7 @@ function getRanking(sug){
   sug.forEach(s=>{const k=(s.music+'||'+s.artist).toUpperCase();if(!map[k])map[k]={music:s.music,artist:s.artist,count:0,lastDate:s.date,obs:s.obs};map[k].count++;if(s.date>map[k].lastDate)map[k].lastDate=s.date;});
   return Object.values(map).sort((a,b)=>b.count-a.count);
 }
-function updateSugBadge(t){const b=document.getElementById('sugBadge');if(t>0){b.style.display='';b.textContent=t;}else b.style.display='none';}
+function updateSugBadge(t){}
 function submitSuggestion(){
   const music=document.getElementById('sugMusic').value.trim();
   const artist=document.getElementById('sugArtist').value.trim();
@@ -666,8 +666,7 @@ function submitSuggestion(){
 }
 
 // ADMIN
-let logoClicks=0,logoTimer;
-document.querySelector('.logo').addEventListener('click',e=>{e.preventDefault();logoClicks++;clearTimeout(logoTimer);logoTimer=setTimeout(()=>{logoClicks=0;},600);if(logoClicks>=3){logoClicks=0;openLogin();}});
+document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();openLogin();}});
 function openLogin(){document.getElementById('loginOverlay').classList.add('open');setTimeout(()=>document.getElementById('loginPwd').focus(),100);}
 function closeLogin(){document.getElementById('loginOverlay').classList.remove('open');document.getElementById('loginPwd').value='';document.getElementById('loginErr').classList.remove('show');}
 function doLogin(){const pwd=document.getElementById('loginPwd').value;if(pwd===ADMIN_PWD){closeLogin();openAdmin();}else{document.getElementById('loginErr').classList.add('show');document.getElementById('loginPwd').value='';document.getElementById('loginPwd').focus();}}
