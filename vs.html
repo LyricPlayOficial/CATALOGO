@@ -402,7 +402,7 @@ header{position:sticky;top:0;z-index:200;background:rgba(24,27,31,.97);backdrop-
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-const WHATSAPP = '5500000000000';
+const WHATSAPP = '5551996768411';
 const ADMIN_PWD = 'lyricplay2025';
 const STORAGE_KEY = 'lyricplay_vs_suggestions';
 
@@ -620,7 +620,7 @@ function sendWpp(){
   const s=[...sel].sort((a,b)=>a-b);
   const lines=s.map(n=>{const sg=songs.find(x=>x.n===n);return`${n}. ${sg.t} — ${sg.a}`;});
   const msg=`Olá! Seguem as músicas que gostaria para o meu pack Lyric VS:\n\n${lines.join('\n')}\n\nTotal: ${s.length} música${s.length>1?'s':''}`;
-  window.open(`https://wa.me/${(51)996768411}?text=${encodeURIComponent(msg)}`,'_blank');
+  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`,'_blank');
 }
 
 // VIDEO
