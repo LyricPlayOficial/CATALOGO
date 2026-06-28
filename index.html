@@ -331,10 +331,27 @@ header{position:sticky;top:0;z-index:200;background:rgba(24,27,31,.97);backdrop-
     .no-preview{display:none}
   }
 
+
+  /* Preview icon — mobile only */
+  .preview-icon{
+    display:flex !important;
+    width:28px;height:28px;
+    border-radius:50%;
+    background:rgba(242,99,26,.2);
+    border:1.5px solid var(--orange);
+    color:var(--orange);
+    align-items:center;justify-content:center;
+    cursor:pointer;flex-shrink:0;
+  }
+  .preview-icon--soon{
+    background:rgba(255,255,255,.06);
+    border-color:rgba(255,255,255,.15);
+    color:var(--muted);
+  }
 }
 
 
-  /* preview-icon: hidden on desktop, shown on mobile */
+  /* preview-icon: hidden on desktop */
   .card-artist-row{display:flex;align-items:center;justify-content:space-between;gap:4px;margin-top:5px}
   .preview-icon{display:none}
 </style>
@@ -755,7 +772,7 @@ function renderGrid(){
         <div class="card-title">${s.t}</div>
         <div class="card-artist-row">
           <div class="card-artist">${s.a}</div>
-          <button class="preview-icon${ig?'':' preview-icon--soon'}" onclick="event.stopPropagation();openVideo(${s.n},\`${s.t}\`,\`${s.a}\`)" title="${ig?'Ver prévia':'Prévia em breve'}">
+          <button class="preview-icon${ig?'':' preview-icon--soon'}" onclick="if(window.matchMedia('(pointer:fine)').matches){event.stopPropagation();openVideo(${s.n},\`${s.t}\`,\`${s.a}\`)}" title="${ig?'Ver prévia':'Prévia em breve'}">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="${ig?'currentColor':'none'}" stroke="${ig?'none':'currentColor'}" stroke-width="2"><polygon points="5,3 19,12 5,21"/></svg>
           </button>
         </div>
