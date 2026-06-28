@@ -695,7 +695,8 @@ function downloadExcel(){
 }
 function clearAllData(){if(confirm('Apagar TODAS as sugestões VS?')){localStorage.removeItem(STORAGE_KEY);updateSugBadge(0);openAdmin();}}
 
-buildTabs();filter();updateSugBadge(loadSuggestions().length);
+buildTabs();filter();
+document.addEventListener('keydown',function(e){if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();openLogin();}});updateSugBadge(loadSuggestions().length);
 </script>
 </body>
 </html>
