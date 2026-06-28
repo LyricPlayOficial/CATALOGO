@@ -666,7 +666,7 @@ function submitSuggestion(){
 }
 
 // ADMIN
-document.addEventListener('keydown',e=>{if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();openLogin();}});
+
 function openLogin(){document.getElementById('loginOverlay').classList.add('open');setTimeout(()=>document.getElementById('loginPwd').focus(),100);}
 function closeLogin(){document.getElementById('loginOverlay').classList.remove('open');document.getElementById('loginPwd').value='';document.getElementById('loginErr').classList.remove('show');}
 function doLogin(){const pwd=document.getElementById('loginPwd').value;if(pwd===ADMIN_PWD){closeLogin();openAdmin();}else{document.getElementById('loginErr').classList.add('show');document.getElementById('loginPwd').value='';document.getElementById('loginPwd').focus();}}
@@ -696,7 +696,8 @@ function downloadExcel(){
 function clearAllData(){if(confirm('Apagar TODAS as sugestões VS?')){localStorage.removeItem(STORAGE_KEY);updateSugBadge(0);openAdmin();}}
 
 buildTabs();filter();
-document.addEventListener('keydown',function(e){if(e.ctrlKey&&e.shiftKey&&e.key==='A'){e.preventDefault();openLogin();}});updateSugBadge(loadSuggestions().length);
+updateSugBadge(loadSuggestions().length);
 </script>
+<div id="lp-footer" ondblclick="openLogin()" style="text-align:center;padding:24px;font-size:11px;color:#333;cursor:default">© Lyric Play 2025</div>
 </body>
 </html>
