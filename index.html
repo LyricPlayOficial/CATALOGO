@@ -354,9 +354,7 @@ header{position:sticky;top:0;z-index:200;background:rgba(24,27,31,.97);backdrop-
       </div>
     </div>
 
-    <div class="recent-box" id="recentBox" style="display:none">
-      <h3>Músicas mais sugeridas</h3>
-      <div id="recentList"><div class="recent-empty">Nenhuma sugestão ainda. Seja o primeiro!</div></div>
+    
     </div>
   </div>
 </div>
@@ -736,11 +734,7 @@ function submitSuggestion() {
   if (SHOW_PUBLIC_RANKING) renderPublicRanking();
 }
 
-function updateSugBadge(total) {
-  const badge = document.getElementById('sugBadge');
-  if (total > 0) { badge.style.display = ''; badge.textContent = total; }
-  else badge.style.display = 'none';
-}
+function updateSugBadge(total) {}
 
 function renderPublicRanking() {
   const suggestions = loadSuggestions();
@@ -764,14 +758,8 @@ function renderPublicRanking() {
 
 // ── ADMIN ─────────────────────────────────────────────
 // Secret: triple-click on logo to open admin login
-let logoClicks = 0, logoTimer;
-document.querySelector('.logo').addEventListener('click', e => {
-  e.preventDefault();
-  logoClicks++;
-  clearTimeout(logoTimer);
-  logoTimer = setTimeout(() => { logoClicks = 0; }, 600);
-  if (logoClicks >= 3) { logoClicks = 0; openLogin(); }
-});
+
+
 
 function openLogin() {
   document.getElementById('loginOverlay').classList.add('open');
