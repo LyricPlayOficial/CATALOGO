@@ -684,11 +684,7 @@ function buildTabs(){
     w.appendChild(b);
   });
 }
-function filter(){
-  const q=document.getElementById('srch').value.toLowerCase().trim();
-  vis=songs.filter(s=>mF(s,activeF)&&(!q||s.t.toLowerCase().includes(q)||s.a.toLowerCase().includes(q)));
-  document.getElementById('visCnt').textContent=vis.length;renderGrid();
-}
+
 function renderGrid(){
   const g=document.getElementById('grid');
   if(!vis.length){g.innerHTML='<div class="empty"><div class="empty-icon">🔍</div><p>Nenhuma música encontrada</p></div>';return;}
@@ -922,6 +918,17 @@ function closeVideo(){
   document.getElementById('videoBody').innerHTML='';
 }
 function videoOutside(e){if(e.target===document.getElementById('videoOverlay'))closeVideo();}
+function normalize(str){
+  return str.toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'') // remove accents
+    .replace(/[^a-z0-9\s]/g,' ')                      // punctuation → space
+    .replace(/\s+/g,' ').trim();                       // collapse spaces
+}
+function filter(){
+  const q=normalize(document.getElementById('srch').value);
+  vis=songs.filter(s=>mF(s,activeF)&&(!q||normalize(s.t).includes(q)||normalize(s.a).includes(q)));
+  document.getElementById('visCnt').textContent=vis.length;renderGrid();
+}
 buildTabs();
 filter();
 updateSugBadge(loadSuggestions().length);
