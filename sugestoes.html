@@ -235,10 +235,9 @@ function closeLogin(){
   document.getElementById('loginPwd').value = '';
   document.getElementById('loginErr').style.display = 'none';
 }
-function doLogin(){
+async function doLogin(){
   if(document.getElementById('loginPwd').value === ADMIN_PWD){
-    closeLogin();
-    openAdmin();
+    closeLogin(); await openAdmin();
   } else {
     document.getElementById('loginErr').style.display = 'block';
     document.getElementById('loginPwd').value = '';
