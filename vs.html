@@ -688,19 +688,39 @@ function getRanking(sug){
   return Object.values(map).sort((a,b)=>b.count-a.count);
 }
 function updateSugBadge(t){}
-function submitSuggestion(){
-  const music=document.getElementById('sugMusic').value.trim();
-  const artist=document.getElementById('sugArtist').value.trim();
-  const obs=document.getElementById('sugObs').value.trim();
-  if(!music||!artist){document.getElementById('sugMusic').style.borderColor=!music?'rgba(248,113,113,.6)':'';document.getElementById('sugArtist').style.borderColor=!artist?'rgba(248,113,113,.6)':'';return;}
-  document.getElementById('sugMusic').style.borderColor='';document.getElementById('sugArtist').style.borderColor='';
+async function submitSuggestion(){
+  const music  = document.getElementById('sugMusic').value.trim();
+  const artist = document.getElementById('sugArtist').value.trim();
+  const obs    = document.getElementById('sugObs')?document.getElementById('sugObs').value.trim():'';
+  const mEl = document.getElementById('sugMusic');
+  const aEl = document.getElementById('sugArtist');
+  if(mEl) mEl.classList.toggle('error',!music);
+  if(aEl) aEl.classList.toggle('error',!artist);
+  if(!music||!artist) return;
+  const btn=document.getElementById('sugBtn')||document.getElementById('btnSend');
+  if(btn) btn.disabled=true;
   const now=new Date();
   const dateStr=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-  const sug=loadSuggestions();sug.push({music,artist,obs,date:dateStr});saveSuggestions(sug);
-  updateSugBadge(sug.length);
-  document.getElementById('sugBtn').disabled=true;document.getElementById('sugSuccess').classList.add('show');
-  document.getElementById('sugMusic').value='';document.getElementById('sugArtist').value='';document.getElementById('sugObs').value='';
-  setTimeout(()=>{document.getElementById('sugSuccess').classList.remove('show');document.getElementById('sugBtn').disabled=false;},3500);
+  try{
+    await fetch('https://sheetdb.io/api/v1/jcxpodjv92ltn',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({data:{musica:music,artista:artist,observacao:obs,data:dateStr}})
+    });
+  }catch(e){console.warn('SheetDB:',e);}
+  const sucSec=document.getElementById('sugSuccess')||document.getElementById('successSection');
+  const formSec=document.getElementById('formSection');
+  if(formSec) formSec.style.display='none';
+  if(sucSec){sucSec.classList.add('show');sucSec.style.display='block';}
+  setTimeout(()=>{
+    if(btn) btn.disabled=false;
+    if(formSec) formSec.style.display='block';
+    if(sucSec){sucSec.classList.remove('show');sucSec.style.display='none';}
+    if(mEl) mEl.value='';
+    if(aEl) aEl.value='';
+    const obsEl=document.getElementById('sugObs');
+    if(obsEl) obsEl.value='';
+  },3500);
 }
 
 // ADMIN
