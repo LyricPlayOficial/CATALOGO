@@ -728,28 +728,74 @@ async function submitSuggestion(){
 function openLogin(){document.getElementById('loginOverlay').classList.add('open');setTimeout(()=>document.getElementById('loginPwd').focus(),100);}
 function closeLogin(){document.getElementById('loginOverlay').classList.remove('open');document.getElementById('loginPwd').value='';document.getElementById('loginErr').classList.remove('show');}
 function doLogin(){const pwd=document.getElementById('loginPwd').value;if(pwd===ADMIN_PWD){closeLogin();openAdmin();}else{document.getElementById('loginErr').classList.add('show');document.getElementById('loginPwd').value='';document.getElementById('loginPwd').focus();}}
-function openAdmin(){
-  const sug=loadSuggestions();const ranking=getRanking(sug);
-  document.getElementById('adTotal').textContent=sug.length;document.getElementById('adUniq').textContent=ranking.length;document.getElementById('adTop').textContent=ranking.length?ranking[0].count:'—';
-  const rc=['gold','silver','bronze'];
-  document.getElementById('adminRows').innerHTML=ranking.length?ranking.map((r,i)=>`<div class="admin-row"><div class="admin-row-rank ${rc[i]||''}">${i+1}</div><div class="admin-row-song"><strong>${r.music}</strong><small>${r.artist}${r.obs?' · '+r.obs:''}</small></div><div class="admin-row-date">${r.lastDate}</div><div class="admin-row-count"><span class="count-pill">${r.count}</span></div></div>`).join(''):'<div style="padding:20px;text-align:center;color:var(--muted);font-weight:700">Nenhuma sugestão ainda</div>';
+async function openAdmin(){
   document.getElementById('adminOverlay').classList.add('open');
+  document.getElementById('adminRows').innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-weight:700">Carregando...</div>';
+
+  let suggestions=[];
+  try{
+    const res = await fetch('https://sheetdb.io/api/v1/jcxpodjv92ltn');
+    suggestions = await res.json();
+  }catch(e){
+    document.getElementById('adminRows').innerHTML='<div style="padding:20px;text-align:center;color:#f87171;font-weight:700">Erro ao carregar sugestões.</div>';
+    return;
+  }
+
+  // Build ranking
+  const map={};
+  suggestions.forEach(s=>{
+    const k=((s.musica||s.music)+'||'+(s.artista||s.artist)).toUpperCase();
+    if(!map[k])map[k]={music:s.musica||s.music,artist:s.artista||s.artist,count:0,lastDate:s.data||s.date,obs:s.observacao||s.obs||''};
+    map[k].count++;
+    if((s.data||s.date)>map[k].lastDate)map[k].lastDate=s.data||s.date;
+  });
+  const ranking=Object.values(map).sort((a,b)=>b.count-a.count);
+
+  document.getElementById('adTotal').textContent=suggestions.length;
+  document.getElementById('adUniq').textContent=ranking.length;
+  document.getElementById('adTop').textContent=ranking.length?ranking[0].count:'—';
+
+  const rc=['gold','silver','bronze'];
+  document.getElementById('adminRows').innerHTML=ranking.length
+    ?ranking.map((r,i)=>`
+        <div class="admin-row">
+          <div class="admin-row-rank ${rc[i]||''}">${i+1}</div>
+          <div class="admin-row-song"><strong>${r.music}</strong><small>${r.artist}${r.obs?' · '+r.obs:''}</small></div>
+          <div class="admin-row-date">${r.lastDate}</div>
+          <div class="admin-row-count"><span class="count-pill">${r.count}</span></div>
+        </div>`).join('')
+    :'<div style="padding:20px;text-align:center;color:var(--muted);font-weight:700">Nenhuma sugestão ainda</div>';
 }
 function closeAdmin(){document.getElementById('adminOverlay').classList.remove('open');}
 function adminOutside(e){if(e.target===document.getElementById('adminOverlay'))closeAdmin();}
-function downloadExcel(){
-  const sug=loadSuggestions();const ranking=getRanking(sug);
+async function downloadExcel(){
+  let suggestions=[];
+  try{
+    const res=await fetch('https://sheetdb.io/api/v1/jcxpodjv92ltn');
+    suggestions=await res.json();
+  }catch(e){alert('Erro ao buscar dados.');return;}
+
+  const map={};
+  suggestions.forEach(s=>{
+    const k=((s.musica||s.music)+'||'+(s.artista||s.artist)).toUpperCase();
+    if(!map[k])map[k]={music:s.musica||s.music,artist:s.artista||s.artist,count:0,lastDate:s.data||s.date,obs:s.observacao||s.obs||''};
+    map[k].count++;
+    if((s.data||s.date)>map[k].lastDate)map[k].lastDate=s.data||s.date;
+  });
+  const ranking=Object.values(map).sort((a,b)=>b.count-a.count);
+
   const r1=[['#','Música','Artista','Votos','Última Sugestão','Observação']];
   ranking.forEach((r,i)=>r1.push([i+1,r.music,r.artist,r.count,r.lastDate,r.obs||'']));
   const r2=[['#','Música','Artista','Observação','Data']];
-  sug.forEach((s,i)=>r2.push([i+1,s.music,s.artist,s.obs||'',s.date]));
+  suggestions.forEach((s,i)=>r2.push([i+1,s.musica||s.music,s.artista||s.artist,s.observacao||s.obs||'',s.data||s.date]));
+
   const wb=XLSX.utils.book_new();
-  const ws1=XLSX.utils.aoa_to_sheet(r1);const ws2=XLSX.utils.aoa_to_sheet(r2);
-  ws1['!cols']=[{wch:5},{wch:40},{wch:30},{wch:8},{wch:20},{wch:30}];
-  ws2['!cols']=[{wch:5},{wch:40},{wch:30},{wch:30},{wch:20}];
-  XLSX.utils.book_append_sheet(wb,ws1,'Ranking VS');XLSX.utils.book_append_sheet(wb,ws2,'Todas as Sugestões VS');
+  const ws1=XLSX.utils.aoa_to_sheet(r1);ws1['!cols']=[{wch:5},{wch:40},{wch:30},{wch:8},{wch:20},{wch:30}];
+  const ws2=XLSX.utils.aoa_to_sheet(r2);ws2['!cols']=[{wch:5},{wch:40},{wch:30},{wch:30},{wch:20}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Ranking');
+  XLSX.utils.book_append_sheet(wb,ws2,'Todas as Sugestões');
   const now=new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
-  XLSX.writeFile(wb,`LyricPlay_VS_Sugestoes_${now}.xlsx`);
+  XLSX.writeFile(wb,`LyricPlay_Sugestoes_${now}.xlsx`);
 }
 function clearAllData(){if(confirm('Apagar TODAS as sugestões VS?')){localStorage.removeItem(STORAGE_KEY);updateSugBadge(0);openAdmin();}}
 
@@ -767,6 +813,6 @@ function filter(){
 buildTabs();filter();
 updateSugBadge(loadSuggestions().length);
 </script>
-<div id="lp-footer" ondblclick="openLogin()" style="text-align:center;padding:24px;font-size:11px;color:#333;cursor:default">© Lyric Play 2025</div>
+<div id="lp-footer" onclick="(function(){window._lpc=(window._lpc||0)+1;clearTimeout(window._lpt);window._lpt=setTimeout(()=>window._lpc=0,800);if(window._lpc>=4)openLogin();})()" style="text-align:center;padding:24px;font-size:11px;color:#333;cursor:default">© Lyric Play 2025</div>
 </body>
 </html>
