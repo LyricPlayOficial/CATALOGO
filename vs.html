@@ -727,7 +727,7 @@ async function submitSuggestion(){
 
 function openLogin(){document.getElementById('loginOverlay').classList.add('open');setTimeout(()=>document.getElementById('loginPwd').focus(),100);}
 function closeLogin(){document.getElementById('loginOverlay').classList.remove('open');document.getElementById('loginPwd').value='';document.getElementById('loginErr').classList.remove('show');}
-function doLogin(){const pwd=document.getElementById('loginPwd').value;if(pwd===ADMIN_PWD){closeLogin();openAdmin();}else{document.getElementById('loginErr').classList.add('show');document.getElementById('loginPwd').value='';document.getElementById('loginPwd').focus();}}
+async function doLogin(){const pwd=document.getElementById('loginPwd').value;if(pwd===ADMIN_PWD){closeLogin(); await openAdmin();}else{document.getElementById('loginErr').classList.add('show');document.getElementById('loginPwd').value='';document.getElementById('loginPwd').focus();}}
 async function openAdmin(){
   document.getElementById('adminOverlay').classList.add('open');
   document.getElementById('adminRows').innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-weight:700">Carregando...</div>';
