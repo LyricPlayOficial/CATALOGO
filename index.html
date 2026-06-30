@@ -817,11 +817,10 @@ function closeLogin() {
   document.getElementById('loginPwd').value = '';
   document.getElementById('loginErr').classList.remove('show');
 }
-function doLogin() {
+async function doLogin(){
   const pwd = document.getElementById('loginPwd').value;
   if (pwd === ADMIN_PWD) {
-    closeLogin();
-    openAdmin();
+    closeLogin(); await openAdmin();
   } else {
     document.getElementById('loginErr').classList.add('show');
     document.getElementById('loginPwd').value = '';
