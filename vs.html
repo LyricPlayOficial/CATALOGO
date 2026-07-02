@@ -669,10 +669,13 @@ function openModal(){
 function closeModal(){document.getElementById('overlay').classList.remove('open');}
 function outsideClick(e){if(e.target===document.getElementById('overlay'))closeModal();}
 function sendWpp(){
-  const s=[...sel].sort((a,b)=>a-b);
-  const lines=s.map(n=>{const sg=songs.find(x=>x.n===n);return`${n}. ${sg.t} — ${sg.a}`;});
-  const msg=`Olá! Seguem as músicas que gostaria para o meu pack Lyric VS:\n\n${lines.join('\n')}\n\nTotal: ${s.length} música${s.length>1?'s':''}`;
-  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(msg)}`,'_blank');
+  const s=[...sel].map(Number).sort((a,b)=>a-b);
+  const lines=s.map(n=>{
+    const sg=songs.find(x=>Number(x.n)===n);
+    return sg?`▸ ${n}. ${sg.t} — ${sg.a}`:`▸ ${n}. (não encontrada)`;
+  });
+  const msg=`⚠️ *NÃO EDITE ESTA MENSAGEM*\n_Caso precise alterar, volte ao catálogo e refaça a seleção._\n━━━━━━━━━━━━━━━━━━━━\n\n🎵 *Olá! Segue minha seleção de músicas:*\n\n${lines.join('\n')}\n\n━━━━━━━━━━━━━━━━━━━━\n📦 *Total: ${s.length} música${s.length>1?'s':''} — Lyric Play VS*`;
+  window.open('https://wa.me/'+WHATSAPP+'?text='+encodeURIComponent(msg),'_blank');
 }
 
 // VIDEO
