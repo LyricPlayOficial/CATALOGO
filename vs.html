@@ -767,28 +767,47 @@ async function openAdmin(){
     return;
   }
 
-  // Build ranking
   const map={};
+  function norm(s){return(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();}
   suggestions.forEach(s=>{
-    const k=((s.musica||s.music)+'||'+(s.artista||s.artist)).toUpperCase();
-    if(!map[k])map[k]={music:s.musica||s.music,artist:s.artista||s.artist,count:0,lastDate:s.data||s.date,obs:s.observacao||s.obs||''};
+    const m=s.musica||s.music||'';
+    const a=s.artista||s.artist||'';
+    const k=norm(m)+'||'+norm(a);
+    if(!map[k])map[k]={music:m,artist:a,count:0,lastDate:s.data||s.date||'',obs:s.observacao||s.obs||''};
     map[k].count++;
-    if((s.data||s.date)>map[k].lastDate)map[k].lastDate=s.data||s.date;
+    const d=s.data||s.date||'';
+    if(d>map[k].lastDate)map[k].lastDate=d;
   });
   const ranking=Object.values(map).sort((a,b)=>b.count-a.count);
+  const maxCount=ranking.length?ranking[0].count:1;
 
   document.getElementById('adTotal').textContent=suggestions.length;
   document.getElementById('adUniq').textContent=ranking.length;
   document.getElementById('adTop').textContent=ranking.length?ranking[0].count:'—';
 
   const rc=['gold','silver','bronze'];
+
+  function rowColor(count){
+    if(count>=maxCount&&count>1) return 'var(--orange)';
+    if(count>1) return '#ffb347';
+    return 'var(--white)';
+  }
+  function rowBg(count){
+    if(count>=maxCount&&count>1) return 'rgba(242,99,26,.15)';
+    if(count>1) return 'rgba(242,99,26,.07)';
+    return 'transparent';
+  }
+
   document.getElementById('adminRows').innerHTML=ranking.length
     ?ranking.map((r,i)=>`
-        <div class="admin-row">
+        <div class="admin-row" style="background:${rowBg(r.count)};border-bottom:1px solid rgba(255,255,255,.04)">
           <div class="admin-row-rank ${rc[i]||''}">${i+1}</div>
-          <div class="admin-row-song"><strong>${r.music}</strong><small>${r.artist}${r.obs?' · '+r.obs:''}</small></div>
+          <div class="admin-row-song">
+            <strong style="color:${rowColor(r.count)}">${r.music}</strong>
+            <small>${r.artist}${r.obs?' · '+r.obs:''}</small>
+          </div>
           <div class="admin-row-date">${r.lastDate}</div>
-          <div class="admin-row-count"><span class="count-pill">${r.count}</span></div>
+          <div class="admin-row-count"><span class="count-pill" style="${r.count>1?'background:var(--orange);color:#fff':''}">${r.count}${r.count>1?' ★':''}</span></div>
         </div>`).join('')
     :'<div style="padding:20px;text-align:center;color:var(--muted);font-weight:700">Nenhuma sugestão ainda</div>';
 }
