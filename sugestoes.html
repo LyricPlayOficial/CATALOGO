@@ -266,7 +266,7 @@ async function doLogin(){
   }
 }
 async function openAdmin(){
-  document.getElementById('adminOverlay').classList.add('open');
+  document.getElementById('adminOverlay').style.display='flex';
   document.getElementById('adminRows').innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-weight:700">Carregando...</div>';
 
   let suggestions=[];
