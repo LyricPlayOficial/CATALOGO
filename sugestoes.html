@@ -235,8 +235,14 @@ async function submitSuggestion(){
   // 1. Check if song exists in catalog
   const catalog = typeof catalogSongs !== 'undefined' ? catalogSongs :
                   (typeof songs !== 'undefined' ? songs.map(s=>({n:s.n,t:s.t,cat:'Slide'})) : []);
-  const exists = catalog.find(s => norm(s.t) === normMusic ||
-    normMusic.split(' ').filter(w=>w.length>3).every(w=>norm(s.t).includes(w)));
+  // Exact match only - avoid false positives
+  const exists = catalog.find(s => {
+    const nt = norm(s.t);
+    // Must be exact OR one fully contains the other (very similar title)
+    return nt === normMusic || 
+      (normMusic.length > 8 && nt === normMusic) ||
+      (normMusic.length > 10 && nt.startsWith(normMusic) && nt.length - normMusic.length < 5);
+  });
   if(exists){
     showMsg('catalog', '🎵 Essa música já está no nosso catálogo! ('+exists.cat+' #'+exists.n+' — '+exists.t+')');
     if(mEl) mEl.style.borderColor='rgba(251,191,36,.6)';
