@@ -310,6 +310,11 @@ header{position:sticky;top:0;z-index:200;background:rgba(24,27,31,.97);backdrop-
   .play-btn{width:44px;height:44px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;box-shadow:0 2px 18px rgba(0,0,0,.5);transform:scale(.8);transition:transform .18s}
   .card:hover .play-btn{transform:scale(1)}
   .preview-icon{display:none;width:28px;height:28px;border-radius:50%;background:transparent;border:2px solid var(--orange);color:var(--orange);align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+
+.sug-msg{display:none;align-items:center;gap:12px;border-radius:10px;padding:14px 18px;margin-top:14px;font-size:14px;font-weight:700;line-height:1.5;text-align:left}
+.sug-msg--yellow{background:rgba(251,191,36,.15);border:1.5px solid rgba(251,191,36,.5);color:#fbbf24}
+.sug-msg--orange{background:rgba(242,99,26,.15);border:1.5px solid rgba(242,99,26,.5);color:#f2631a}
+
 </style>
 </head>
 <body>
@@ -396,6 +401,7 @@ header{position:sticky;top:0;z-index:200;background:rgba(24,27,31,.97);backdrop-
           <input type="text" id="sugObs" placeholder="Ex: versão ao vivo, tonalidade, etc." maxlength="200">
         </div>
       </div>
+      <div id="sugMsg" class="sug-msg"></div>
       <button class="btn-suggest" onclick="submitSuggestion()" id="sugBtn">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Enviar Sugestão
@@ -472,6 +478,7 @@ header{position:sticky;top:0;z-index:200;background:rgba(24,27,31,.97);backdrop-
 <script>
 const WHATSAPP = '5551996768711';
 const ADMIN_PWD = 'LP@2025#slide!';
+const catalogSongs=typeof songs!=='undefined'?songs.map(s=>({n:s.n,t:s.t,cat:'Catálogo'})):[];
 const STORAGE_KEY = 'lyricplay_vs_suggestions';
 
 const igLinks={2:"https://www.instagram.com/reel/DavNHkTo3lh/",18:"https://www.instagram.com/reel/DSa8EO0gdYW/",21:"https://www.instagram.com/reel/DQXowQVgbBF/",22:"https://www.instagram.com/reel/Db3UBUWSnvU/",26:"https://www.instagram.com/reel/DKUhOlBtb91/",32:"https://www.instagram.com/reel/DYsDDOPIBWJ/",36:"https://www.instagram.com/reel/DKA2e7-tMbV/",38:"https://www.instagram.com/reel/DKKp9g3Adqy/",39:"https://www.instagram.com/reel/DKwdhlGNNQG/",40:"https://www.instagram.com/reel/DKuQ77WM6JL/",41:"https://www.instagram.com/reel/DLtD0e_sS-D/",42:"https://www.instagram.com/reel/DL0W4sUyoWZ/",43:"https://www.instagram.com/reel/DKpPTY7MtsP/",44:"https://www.instagram.com/reel/DLBS07ytUi5/",45:"https://www.instagram.com/reel/DLQjGnkhy-k/",46:"https://www.instagram.com/reel/DNBzpuWh35P/",47:"https://www.instagram.com/reel/DMftfCxMjjN/",48:"https://www.instagram.com/reel/DLfiOxHs7Sw/",49:"https://www.instagram.com/reel/DMNGt-jN4cm/",51:"https://www.instagram.com/reel/DNHD_VUhWgN/",52:"https://www.instagram.com/reel/DK67AqINPJ0/",54:"https://www.instagram.com/reel/DKkWk8Tg_Mf/",55:"https://www.instagram.com/reel/DM_Mwz_hONR/",56:"https://www.instagram.com/reel/DKS70Lyt5ZF/",57:"https://www.instagram.com/reel/DMaSafVMPzm/",58:"https://www.instagram.com/reel/DM8ol7ghHYn/",59:"https://www.instagram.com/reel/DN6YWipgbNK/",60:"https://www.instagram.com/reel/DNrKunjwuj3/",61:"https://www.instagram.com/reel/DN8_2xdgXs0/",62:"https://www.instagram.com/reel/DM0_CtZBS3Q/",63:"https://www.instagram.com/reel/DOeHESADVZU/",64:"https://www.instagram.com/reel/DK-NhnWSBDL/",65:"https://www.instagram.com/reel/DM5GB1Bs69P/",66:"https://www.instagram.com/reel/DNnp-BdNGUv/",67:"https://www.instagram.com/reel/DOy0wr-gfis/",68:"https://www.instagram.com/reel/DMKh9c5sXe0/",69:"https://www.instagram.com/reel/DQepFy6DdWg/",70:"https://www.instagram.com/reel/DOwgq6RgTrK/",71:"https://www.instagram.com/reel/DPjVCR1DWNK/",72:"https://www.instagram.com/reel/DRSvFBeAUS1/",73:"https://www.instagram.com/reel/DQXowQVgbBF/",74:"https://www.instagram.com/reel/DPPb3ABEUTy/",75:"https://www.instagram.com/reel/DMaSafVMPzm/",76:"https://www.instagram.com/reel/DRmx8kyjduP/",77:"https://www.instagram.com/reel/DQUXH8tDR6d/",78:"https://www.instagram.com/reel/DP1ZJaOjXqt/",79:"https://www.instagram.com/reel/DPCohCYATMh/",80:"https://www.instagram.com/reel/DSBMB7kgbX5/",81:"https://www.instagram.com/reel/DQxcYbPgV-t/",82:"https://www.instagram.com/reel/DSuxtr2jRB4/",83:"https://www.instagram.com/reel/DRAmIIlAfdM/",84:"https://www.instagram.com/reel/DQrjuYKjbsy/",85:"https://www.instagram.com/reel/DO_bzdVjd5Z/",86:"https://www.instagram.com/reel/DSm8Nn_DWFe/",87:"https://www.instagram.com/reel/DSVGlaFDZc_/",88:"https://www.instagram.com/reel/DPUGEQCDUNb/",89:"https://www.instagram.com/reel/DTlj5cIAfk8/",90:"https://www.instagram.com/reel/DORqQAcgWq-/",91:"https://www.instagram.com/reel/DTgCaLjAZ-F/",92:"https://www.instagram.com/reel/DUGcemgAaDp/",93:"https://www.instagram.com/reel/DUYhhPKjXcx/",94:"https://www.instagram.com/reel/DUWIhUxAbuC/",95:"https://www.instagram.com/reel/DO64Hv2gYk7/",96:"https://www.instagram.com/reel/DT09JtRAeRI/",97:"https://www.instagram.com/reel/DUa6EjOjgHH/",98:"https://www.instagram.com/reel/DVZcIwogRPX/",99:"https://www.instagram.com/reel/DNincpWtR95/",100:"https://www.instagram.com/reel/DU51w_bDbZU/",101:"https://www.instagram.com/reel/DTjH0olgZaO/",102:"https://www.instagram.com/reel/DVd4AD2jWe0/",103:"https://www.instagram.com/reel/DTvJRfWDRwK/",104:"https://www.instagram.com/reel/DVyggeSDWfk/",105:"https://www.instagram.com/reel/DTx6QckjVPS/",106:"https://www.instagram.com/reel/DWCkjY3gVb2/",107:"https://www.instagram.com/reel/DWR8j1RAblx/",108:"https://www.instagram.com/reel/DW4lMByAYnH/",109:"https://www.instagram.com/reel/DXPHa-GuIZi/",110:"https://www.instagram.com/reel/DVv7_idDQI_/",111:"https://www.instagram.com/reel/DNYJ4c_trt6/",113:"https://www.instagram.com/reel/DYHyXGjtfhU/",114:"https://www.instagram.com/reel/DYe8yV3Neby/",115:"https://www.instagram.com/reel/DY9WvUvuPS2/",116:"https://www.instagram.com/reel/DQmscUBAbNj/",117:"https://www.instagram.com/reel/DOof4sBgbr_/",118:"https://www.instagram.com/reel/DS7OZRnDsED/",119:"https://www.instagram.com/reel/DU32pagAX1N/",120:"https://www.instagram.com/reel/DZnSsWwoQRI/",121:"https://www.instagram.com/reel/DZ0iy_Hhjgj/",122:"https://www.instagram.com/reel/DZu0dQZIFJ-/",123:"https://www.instagram.com/reel/DYhkOc6t5Jf/",124:"https://www.instagram.com/reel/DbGlTumINlO/"};
@@ -732,45 +739,44 @@ function updateSugBadge(t){}
 async function submitSuggestion(){
   const music  = document.getElementById('sugMusic').value.trim();
   const artist = document.getElementById('sugArtist').value.trim();
-  const obs    = document.getElementById('sugObs')?document.getElementById('sugObs').value.trim():'';
+  const obsEl  = document.getElementById('sugObs');
+  const obs    = obsEl ? obsEl.value.trim() : '';
   const mEl = document.getElementById('sugMusic');
   const aEl = document.getElementById('sugArtist');
 
-  if(mEl) mEl.classList.remove('error');
-  if(aEl) aEl.classList.remove('error');
-  if(mEl) mEl.style.borderColor='';
-  if(aEl) aEl.style.borderColor='';
+  // Clear errors
+  [mEl,aEl].forEach(el=>{if(el){el.classList.remove('error');el.style.borderColor='';}});
+  hideMsg();
 
-  // Validate fields
   if(!music){ if(mEl) mEl.classList.add('error'); return; }
   if(!artist){ if(aEl) aEl.classList.add('error'); return; }
 
-  // Normalize for comparison
-  function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim(); }
+  function norm(s){
+    return (s||'').toLowerCase().normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9\s]/g,' ')
+      .replace(/\s+/g,' ').trim();
+  }
   const normMusic = norm(music);
 
-  // Check if song already exists in catalog (if songs array is available)
-  if(typeof songs !== 'undefined'){
-    const exists = songs.find(s => norm(s.t) === normMusic);
-    if(exists){
-      if(mEl){ mEl.style.borderColor='rgba(251,191,36,.6)'; }
-      const msgEl = document.getElementById('sugAlreadyExists');
-      if(msgEl){ msgEl.style.display='block'; msgEl.textContent='⚠️ Essa música já está no nosso catálogo! (#'+exists.n+' — '+exists.a+')'; }
-      setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; if(mEl) mEl.style.borderColor=''; }, 5000);
-      return;
-    }
+  // 1. Check if song exists in catalog
+  const catalog = typeof catalogSongs !== 'undefined' ? catalogSongs :
+                  (typeof songs !== 'undefined' ? songs.map(s=>({n:s.n,t:s.t,cat:'Slide'})) : []);
+  const exists = catalog.find(s => norm(s.t) === normMusic ||
+    normMusic.split(' ').filter(w=>w.length>3).every(w=>norm(s.t).includes(w)));
+  if(exists){
+    showMsg('catalog', '🎵 Essa música já está no nosso catálogo! ('+exists.cat+' #'+exists.n+' — '+exists.t+')');
+    if(mEl) mEl.style.borderColor='rgba(251,191,36,.6)';
+    return;
   }
 
-  // Check if user already suggested this song (localStorage anti-duplicate)
+  // 2. Check if already suggested from this device
   const KEY_SENT = 'lyricplay_sent_suggestions';
   let sent = [];
   try{ sent = JSON.parse(localStorage.getItem(KEY_SENT)||'[]'); }catch(e){}
-  const alreadySent = sent.find(s => norm(s) === normMusic);
-  if(alreadySent){
-    if(mEl){ mEl.style.borderColor='rgba(248,113,113,.6)'; }
-    const msgEl = document.getElementById('sugDuplicate');
-    if(msgEl){ msgEl.style.display='block'; }
-    setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; if(mEl) mEl.style.borderColor=''; }, 4000);
+  if(sent.find(s => norm(s) === normMusic)){
+    showMsg('duplicate', '✅ Solicitação já encaminhada! 🔥 Deus abençoe!');
+    if(mEl) mEl.style.borderColor='rgba(242,99,26,.6)';
     return;
   }
 
@@ -788,11 +794,9 @@ async function submitSuggestion(){
     });
   }catch(e){console.warn('SheetDB:',e);}
 
-  // Save to localStorage to prevent duplicate
   sent.push(music);
   try{ localStorage.setItem(KEY_SENT, JSON.stringify(sent)); }catch(e){}
 
-  // Show success
   const sucSec=document.getElementById('sugSuccess')||document.getElementById('successSection');
   const formSec=document.getElementById('formSection');
   if(formSec) formSec.style.display='none';
@@ -803,9 +807,21 @@ async function submitSuggestion(){
     if(sucSec){sucSec.classList.remove('show');sucSec.style.display='none';}
     if(mEl) mEl.value='';
     if(aEl) aEl.value='';
-    const obsEl=document.getElementById('sugObs');
     if(obsEl) obsEl.value='';
+    hideMsg();
   },3500);
+}
+
+function showMsg(type, text){
+  const el = document.getElementById('sugMsg');
+  if(!el) return;
+  el.textContent = text;
+  el.className = 'sug-msg sug-msg--'+(type==='catalog'?'yellow':'orange');
+  el.style.display='flex';
+}
+function hideMsg(){
+  const el = document.getElementById('sugMsg');
+  if(el) el.style.display='none';
 }
 
 // ADMIN
