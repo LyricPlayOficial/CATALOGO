@@ -208,13 +208,51 @@ async function submitSuggestion(){
   const obs    = document.getElementById('sugObs')?document.getElementById('sugObs').value.trim():'';
   const mEl = document.getElementById('sugMusic');
   const aEl = document.getElementById('sugArtist');
-  if(mEl) mEl.classList.toggle('error',!music);
-  if(aEl) aEl.classList.toggle('error',!artist);
-  if(!music||!artist) return;
+
+  if(mEl) mEl.classList.remove('error');
+  if(aEl) aEl.classList.remove('error');
+  if(mEl) mEl.style.borderColor='';
+  if(aEl) aEl.style.borderColor='';
+
+  // Validate fields
+  if(!music){ if(mEl) mEl.classList.add('error'); return; }
+  if(!artist){ if(aEl) aEl.classList.add('error'); return; }
+
+  // Normalize for comparison
+  function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim(); }
+  const normMusic = norm(music);
+
+  // Check if song already exists in catalog (if songs array is available)
+  if(typeof songs !== 'undefined'){
+    const exists = songs.find(s => norm(s.t) === normMusic);
+    if(exists){
+      if(mEl){ mEl.style.borderColor='rgba(251,191,36,.6)'; }
+      const msgEl = document.getElementById('sugAlreadyExists');
+      if(msgEl){ msgEl.style.display='block'; msgEl.textContent='⚠️ Essa música já está no nosso catálogo! (#'+exists.n+' — '+exists.a+')'; }
+      setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; if(mEl) mEl.style.borderColor=''; }, 5000);
+      return;
+    }
+  }
+
+  // Check if user already suggested this song (localStorage anti-duplicate)
+  const KEY_SENT = 'lyricplay_sent_suggestions';
+  let sent = [];
+  try{ sent = JSON.parse(localStorage.getItem(KEY_SENT)||'[]'); }catch(e){}
+  const alreadySent = sent.find(s => norm(s) === normMusic);
+  if(alreadySent){
+    if(mEl){ mEl.style.borderColor='rgba(248,113,113,.6)'; }
+    const msgEl = document.getElementById('sugDuplicate');
+    if(msgEl){ msgEl.style.display='block'; }
+    setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; if(mEl) mEl.style.borderColor=''; }, 4000);
+    return;
+  }
+
   const btn=document.getElementById('sugBtn')||document.getElementById('btnSend');
   if(btn) btn.disabled=true;
+
   const now=new Date();
   const dateStr=now.toLocaleDateString('pt-BR')+' '+now.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+
   try{
     await fetch('https://sheetdb.io/api/v1/jcxpodjv92ltn',{
       method:'POST',
@@ -222,6 +260,12 @@ async function submitSuggestion(){
       body:JSON.stringify({data:{musica:music,artista:artist,observacao:obs,data:dateStr}})
     });
   }catch(e){console.warn('SheetDB:',e);}
+
+  // Save to localStorage to prevent duplicate
+  sent.push(music);
+  try{ localStorage.setItem(KEY_SENT, JSON.stringify(sent)); }catch(e){}
+
+  // Show success
   const sucSec=document.getElementById('sugSuccess')||document.getElementById('successSection');
   const formSec=document.getElementById('formSection');
   if(formSec) formSec.style.display='none';
