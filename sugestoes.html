@@ -74,6 +74,11 @@ footer{position:relative;z-index:1;text-align:center;padding:24px;font-size:11px
   .form-box{padding:24px 16px}
   header{padding:0 16px}
 }
+
+.sug-msg{display:none;align-items:center;gap:12px;border-radius:10px;padding:14px 18px;margin-top:14px;font-size:14px;font-weight:700;line-height:1.5;text-align:left}
+.sug-msg--yellow{background:rgba(251,191,36,.15);border:1.5px solid rgba(251,191,36,.5);color:#fbbf24}
+.sug-msg--orange{background:rgba(242,99,26,.15);border:1.5px solid rgba(242,99,26,.5);color:#f2631a}
+
 </style>
 </head>
 <body>
@@ -109,7 +114,8 @@ footer{position:relative;z-index:1;text-align:center;padding:24px;font-size:11px
           <label>Observação (opcional)</label>
           <input type="text" id="sugObs" placeholder="Ex: versão ao vivo, tonalidade específica..." maxlength="200">
         </div>
-        <button class="btn-send" id="btnSend" onclick="submitSuggestion()">
+        <div id="sugMsg" class="sug-msg"></div>
+      <button class="btn-send" id="btnSend" onclick="submitSuggestion()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
           Enviar Sugestão
         </button>
@@ -177,6 +183,7 @@ footer{position:relative;z-index:1;text-align:center;padding:24px;font-size:11px
 <script>
 // ── MESMA CHAVE DO CATÁLOGO SLIDE ──────────────────────────────────
 // As sugestões aqui e no catálogo ficam no mesmo localStorage
+const catalogSongs=[{n:1,t:"É ELE",cat:"Slide"},{n:2,t:"TU ÉS + ÁGUAS PURIFICADORAS",cat:"Slide"},{n:3,t:"SANTO PRA SEMPRE",cat:"Slide"},{n:4,t:"A ELE A GLÓRIA + PORQUE ELE VIVE",cat:"Slide"},{n:5,t:"GRATIDÃO",cat:"Slide"},{n:6,t:"BONDADE DE DEUS",cat:"Slide"},{n:7,t:"ESTAMOS DE PÉ",cat:"Slide"},{n:8,t:"CLAMO JESUS",cat:"Slide"},{n:9,t:"JEOVÁ JIREH",cat:"Slide"},{n:10,t:"VEM ME BUSCAR",cat:"Slide"},{n:11,t:"FILHO DO DEUS VIVO",cat:"Slide"},{n:12,t:"TEU AMOR NÃO FALHA",cat:"Slide"},{n:13,t:"LOUVE",cat:"Slide"},{n:14,t:"UMA VEZ",cat:"Slide"},{n:15,t:"A BOA PARTE",cat:"Slide"},{n:16,t:"ESCAPE",cat:"Slide"},{n:17,t:"MIL GRAUS",cat:"Slide"},{n:18,t:"CORDEIRO E LEÃO",cat:"Slide"},{n:19,t:"ACENDE OUTRA VEZ",cat:"Slide"},{n:20,t:"GRAÇA",cat:"Slide"},{n:21,t:"NADA MAIS",cat:"Slide"},{n:22,t:"O FOGO ARDERÁ",cat:"Slide"},{n:23,t:"REACENDE A CHAMA",cat:"Slide"},{n:24,t:"SINTO FLUIR",cat:"Slide"},{n:25,t:"PRA SEMPRE",cat:"Slide"},{n:26,t:"TE ESPERAMOS",cat:"Slide"},{n:27,t:"ALGO NOVO",cat:"Slide"},{n:28,t:"DIGNO É O SENHOR",cat:"Slide"},{n:29,t:"MEDLEY RUJA O LEÃO + QUE SE ABRAM OS CÉUS",cat:"Slide"},{n:30,t:"AVIVA-NOS / A TERRA CLAMA",cat:"Slide"},{n:31,t:"GRANDE É O SENHOR",cat:"Slide"},{n:32,t:"NOSSO GENERAL",cat:"Slide"},{n:33,t:"QUEM É ESSE",cat:"Slide"},{n:34,t:"MOISÉS",cat:"Slide"},{n:35,t:"PRIMEIRA ESSÊNCIA",cat:"Slide"},{n:36,t:"ME AMA",cat:"Slide"},{n:37,t:"MEIA NOITE",cat:"Slide"},{n:38,t:"SUBLIME",cat:"Slide"},{n:40,t:"ATÉ QUE O SENHOR VENHA",cat:"Slide"},{n:41,t:"OH QUÃO LINDO ESSE NOME É",cat:"Slide"},{n:42,t:"A ALEGRIA ESTÁ NO CORAÇÃO",cat:"Slide"},{n:43,t:"TODA TERRA",cat:"Slide"},{n:44,t:"MEDLEY PODEROSO DEUS",cat:"Slide"},{n:45,t:"TU ÉS DEUS (A ELE)",cat:"Slide"},{n:46,t:"TUDO É PERDA",cat:"Slide"},{n:47,t:"(MEDLEY) AGNUS DEI + A HONRA, A GLÓRIA + TE EXALTAMOS",cat:"Slide"},{n:48,t:"JESUS EM TUA PRESENÇA",cat:"Slide"},{n:49,t:"ÚNICO",cat:"Slide"},{n:50,t:"ACLAME AO SENHOR",cat:"Slide"},{n:51,t:"DIGNO DE TUDO + TE EXALTAMOS",cat:"Slide"},{n:52,t:"YAHWEH SE MANIFESTARÁ",cat:"Slide"},{n:53,t:"AO ÚNICO",cat:"Slide"},{n:54,t:"SÓ TU ÉS SANTO",cat:"Slide"},{n:55,t:"FOGO EM TEUS OLHOS",cat:"Slide"},{n:56,t:"ÚNICO",cat:"Slide"},{n:57,t:"EMAÚS",cat:"Slide"},{n:58,t:"ME ATRAIU",cat:"Slide"},{n:59,t:"MEDLEY LEÃO DE JUDÁ",cat:"Slide"},{n:60,t:"VITORIOSO ÉS",cat:"Slide"},{n:61,t:"ALÉM DO IMPOSSÍVEL",cat:"Slide"},{n:62,t:"VIDA AOS SEPULCROS",cat:"Slide"},{n:63,t:"COLOSSENSES E SUAS LINHAS DE AMOR",cat:"Slide"},{n:64,t:"CANÇÃO AO CORDEIRO",cat:"Slide"},{n:65,t:"(MEDLEY) PODE MORAR AQUI + A TERRA CLAMA + RUJA O LEÃO",cat:"Slide"},{n:66,t:"CANÇÃO QUE NÃO ENVELHECE",cat:"Slide"},{n:67,t:"COMO FLECHA",cat:"Slide"},{n:68,t:"FÉ",cat:"Slide"},{n:69,t:"(MEDLEY) NADA ALÉM DO SANGUE + PRA SEMPRE + OH QUÃO LINDO",cat:"Slide"},{n:70,t:"LINDO MOMENTO",cat:"Slide"},{n:71,t:"GALILEU",cat:"Slide"},{n:72,t:"ALFA E ÔMEGA",cat:"Slide"},{n:73,t:"EIS QUE ESTOU À PORTA E BATO",cat:"Slide"},{n:74,t:"(MEDLEY) O ESCUDO + SOU UM MILAGRE",cat:"Slide"},{n:75,t:"ELE REINA",cat:"Slide"},{n:76,t:"CANÇÃO DO APOCALIPSE",cat:"Slide"},{n:77,t:"CÉU E TERRA SE ENCONTRAM",cat:"Slide"},{n:78,t:"MINHAS GUERRAS",cat:"Slide"},{n:79,t:"REDENTOR",cat:"Slide"},{n:80,t:"HÁ PODER",cat:"Slide"},{n:81,t:"MARANATA",cat:"Slide"},{n:82,t:"EU TENHO VOCÊ",cat:"Slide"},{n:83,t:"HOSANA",cat:"Slide"},{n:84,t:"BENDITO É O REI",cat:"Slide"},{n:85,t:"A MENSAGEM DA CRUZ",cat:"Slide"},{n:86,t:"GRATO SOU",cat:"Slide"},{n:87,t:"ÉS BEM VINDO",cat:"Slide"},{n:88,t:"(MEDLEY) MEU RESPIRAR + MEU PRAZER",cat:"Slide"},{n:89,t:"(MEDLEY) EU VOU CONSTRUIR + OH QUÃO LINDO ESSE NOME É",cat:"Slide"},{n:90,t:"ALGO NOVO VINDO",cat:"Slide"},{n:91,t:"ALÉM DO RIO AZUL",cat:"Slide"},{n:92,t:"ESTAÇÕES",cat:"Slide"},{n:93,t:"MARAVILHOSA GRAÇA",cat:"Slide"},{n:94,t:"PAI NOSSO",cat:"Slide"},{n:95,t:"É TUDO SOBRE VOCÊ",cat:"Slide"},{n:96,t:"YESHUA",cat:"Slide"},{n:97,t:"FOGO NÃO QUEIMA FOGO",cat:"Slide"},{n:98,t:"QUEBRANTADO",cat:"Slide"},{n:99,t:"LEÃO E O CORDEIRO",cat:"Slide"},{n:100,t:"UM NOVO DIA",cat:"Slide"},{n:101,t:"NA TERRA COMO NO CÉU",cat:"Slide"},{n:102,t:"JOÃO 20 + PRA SEMPRE",cat:"Slide"},{n:103,t:"RENDIDO ESTOU",cat:"Slide"},{n:104,t:"NO MEIO DOS LOUVORES DO SEU POVO",cat:"Slide"},{n:105,t:"TUDO É TEU",cat:"Slide"},{n:106,t:"SEJA O CENTRO",cat:"Slide"},{n:107,t:"AMBIÇÃO",cat:"Slide"},{n:108,t:"TUA IGREJA CANTA A TI",cat:"Slide"},{n:109,t:"A ALEGRIA DO SENHOR",cat:"Slide"},{n:110,t:"ATOS 2",cat:"Slide"},{n:111,t:"ME DERRAMAR",cat:"Slide"},{n:112,t:"PRECISO DE TI",cat:"Slide"},{n:113,t:"NÃO SEREMOS ABALADOS",cat:"Slide"},{n:114,t:"ISAÍAS 9",cat:"Slide"},{n:115,t:"NASCEU EM BELÉM",cat:"Slide"},{n:116,t:"O FILHO DE DEUS",cat:"Slide"},{n:117,t:"É NATAL",cat:"Slide"},{n:118,t:"Ó NOITE SANTA",cat:"Slide"},{n:119,t:"DIANTE DE TI",cat:"Slide"},{n:120,t:"DANÇAR NA CHUVA",cat:"Slide"},{n:121,t:"EU SOU TEU PAI",cat:"Slide"},{n:122,t:"JESUS FILHO DE DEUS",cat:"Slide"},{n:123,t:"EU E MINHA CASA",cat:"Slide"},{n:124,t:"PAZ SEM FIM (NADA QUEBRADO)",cat:"Slide"},{n:125,t:"NOVA HISTÓRIA",cat:"Slide"},{n:126,t:"EU VOU VIVER UMA VIRADA",cat:"Slide"},{n:127,t:"A BENÇÃO",cat:"Slide"},{n:128,t:"ENCHE-ME",cat:"Slide"},{n:129,t:"SENHOR TU ÉS BOM",cat:"Slide"},{n:130,t:"INDESCULPÁVEL",cat:"Slide"},{n:131,t:"MEDLEY CRISTO + TUDO É TEU",cat:"Slide"},{n:132,t:"OCEANOS",cat:"Slide"},{n:133,t:"MILAGRES",cat:"Slide"},{n:134,t:"DEUS DE OBRAS COMPLETAS",cat:"Slide"},{n:135,t:"CAMINHO NO DESERTO",cat:"Slide"},{n:136,t:"TUA ALEGRIA",cat:"Slide"},{n:137,t:"ATRAI O MEU CORAÇÃO",cat:"Slide"},{n:138,t:"EU SOU LIVRE",cat:"Slide"},{n:139,t:"PRA ONDE EU IREI?",cat:"Slide"},{n:140,t:"TODOS OS DIAS (A BENÇÃO)",cat:"Slide"},{n:141,t:"O CÉU É O MEU LUGAR",cat:"Slide"},{n:142,t:"ELE É EXALTADO",cat:"Slide"},{n:143,t:"O QUE TUA GLÓRIA FEZ COMIGO",cat:"Slide"},{n:144,t:"VEM ESTA É A HORA",cat:"Slide"},{n:145,t:"CONSAGRAÇÃO",cat:"Slide"},{n:146,t:"A CASA É SUA",cat:"Slide"},{n:147,t:"SOBRE AS ÁGUAS",cat:"Slide"},{n:148,t:"SEU SANGUE",cat:"Slide"},{n:149,t:"VITÓRIA NO DESERTO",cat:"Slide"},{n:150,t:"TE LOUVAREI",cat:"Slide"},{n:151,t:"COM MUITO LOUVOR",cat:"Slide"},{n:152,t:"TUDO QUE ME PROMETEU",cat:"Slide"},{n:153,t:"TEU REINO",cat:"Slide"},{n:154,t:"SOU GRATO POR SEU AMOR",cat:"Slide"},{n:155,t:"VENHAM À MESA",cat:"Slide"},{n:156,t:"EU NAVEGAREI",cat:"Slide"},{n:157,t:"QUE JESUS SEJA O NOME",cat:"Slide"},{n:158,t:"OUTRO IGUAL NÃO HÁ (AO REI NÓS COROAMOS)",cat:"Slide"},{n:159,t:"ERA EU",cat:"Slide"},{n:160,t:"UMA CARTA VIVA",cat:"Slide"},{n:161,t:"MELHOR LUGAR",cat:"Slide"},{n:162,t:"BOM PERFUME",cat:"Slide"},{n:163,t:"MESSIAS",cat:"Slide"},{n:164,t:"AMO O SENHOR",cat:"Slide"},{n:165,t:"LUGAR SECRETO (EP CÉU)",cat:"Slide"},{n:166,t:"OS QUE CONFIAM",cat:"Slide"},{n:167,t:"EIS-ME AQUI",cat:"Slide"},{n:168,t:"TUA PRESENÇA VALE MAIS",cat:"Slide"},{n:169,t:"TEU TOQUE",cat:"Slide"},{n:170,t:"QUE SE ABRAM OS CÉUS",cat:"Slide"},{n:171,t:"MEU MESTRE",cat:"Slide"},{n:172,t:"EU TAMBÉM (100 BILHÕES X)",cat:"Slide"},{n:173,t:"GRANDE É O SENHOR (AGITADA)",cat:"Slide"},{n:174,t:"ETERNO DEUS (EVERLASTING GOD)",cat:"Slide"},{n:175,t:"AH, JESUS + CORAÇÃO IGUAL AO TEU",cat:"Slide"},{n:176,t:"LEVANTO UM ALELUIA",cat:"Slide"},{n:177,t:"ELE VEM",cat:"Slide"},{n:178,t:"CORAÇÃO IGUAL AO TEU",cat:"Slide"},{n:179,t:"MARAVILHADO",cat:"Slide"},{n:180,t:"ROMPENDO EM FÉ",cat:"Slide"},{n:181,t:"EM TEUS BRAÇOS",cat:"Slide"},{n:182,t:"QUERO CONHECER JESUS",cat:"Slide"},{n:183,t:"SOBRE AS ÁGUAS",cat:"Slide"},{n:184,t:"PELO REI",cat:"Slide"},{n:185,t:"SALVA-ME, Ó DEUS",cat:"Slide"},{n:186,t:"QUERO JESUS",cat:"Slide"},{n:187,t:"TODAVIA ME ALEGRAREI",cat:"Slide"},{n:188,t:"INCENSÁRIO",cat:"Slide"},{n:189,t:"EM TEU NOME",cat:"Slide"},{n:190,t:"GRAÇA",cat:"Slide"},{n:191,t:"QUEM É COMO NOSSO DEUS?",cat:"Slide"},{n:192,t:"ELE É O LEÃO",cat:"Slide"},{n:1,t:"A ELE A GLÓRIA + PORQUE ELE VIVE",cat:"VS"},{n:2,t:"É ELE",cat:"VS"},{n:3,t:"GRATIDÃO",cat:"VS"},{n:4,t:"SANTO PRA SEMPRE",cat:"VS"},{n:5,t:"TU ÉS + ÁGUAS PURIFICADORAS",cat:"VS"},{n:6,t:"BARULHO DE FESTA",cat:"VS"},{n:7,t:"BONDADE DE DEUS",cat:"VS"},{n:8,t:"CLAMO JESUS",cat:"VS"},{n:9,t:"ESTAMOS DE PÉ",cat:"VS"},{n:10,t:"JESUS É PODEROSO",cat:"VS"},{n:11,t:"FILHO DO DEUS VIVO",cat:"VS"},{n:12,t:"JEOVÁ JIREH",cat:"VS"},{n:13,t:"LOUVE",cat:"VS"},{n:14,t:"TEU AMOR NÃO FALHA",cat:"VS"},{n:15,t:"VEM ME BUSCAR",cat:"VS"},{n:16,t:"A BOA PARTE",cat:"VS"},{n:17,t:"ESCAPE",cat:"VS"},{n:18,t:"EU SOU TEU PAI",cat:"VS"},{n:19,t:"MIL GRAUS",cat:"VS"},{n:20,t:"ACENDE OUTRA VEZ",cat:"VS"},{n:21,t:"CORDEIRO E LEÃO",cat:"VS"},{n:22,t:"GRAÇA",cat:"VS"},{n:23,t:"NADA MAIS",cat:"VS"},{n:24,t:"O FOGO ARDERÁ",cat:"VS"},{n:25,t:"EU TO NO CULTO",cat:"VS"},{n:26,t:"PRA SEMPRE",cat:"VS"},{n:27,t:"REACENDE A CHAMA",cat:"VS"},{n:28,t:"SINTO FLUIR",cat:"VS"},{n:29,t:"TE ESPERAMOS",cat:"VS"},{n:30,t:"ALGO NOVO",cat:"VS"},{n:31,t:"DIGNO É O SENHOR",cat:"VS"},{n:32,t:"GRANDE É O SENHOR",cat:"VS"},{n:33,t:"MOISÉS",cat:"VS"},{n:34,t:"NOSSO GENERAL",cat:"VS"},{n:36,t:"MEIA NOITE",cat:"VS"},{n:37,t:"QUEM É ESSE",cat:"VS"},{n:38,t:"SUBLIME",cat:"VS"},{n:39,t:"TODA TERRA",cat:"VS"},{n:40,t:"A ALEGRIA ESTÁ NO CORAÇÃO",cat:"VS"},{n:41,t:"ACLAME AO SENHOR",cat:"VS"},{n:42,t:"DIGNO DE TUDO + TE EXALTAMOS",cat:"VS"},{n:43,t:"OH QUÃO LINDO ESSE NOME É",cat:"VS"},{n:44,t:"TUDO É PERDA",cat:"VS"},{n:45,t:"(MEDLEY) AGNUS DEI + A HONRA, A GLÓRIA + TE EXALTAMOS",cat:"VS"},{n:46,t:"CANÇÃO AO CORDEIRO",cat:"VS"},{n:47,t:"EMAÚS",cat:"VS"},{n:48,t:"JESUS EM TUA PRESENÇA",cat:"VS"},{n:49,t:"SÓ TU ÉS SANTO",cat:"VS"},{n:50,t:"AVIVA-NOS / A TERRA CLAMA",cat:"VS"},{n:51,t:"(MEDLEY) PODE MORAR AQUI + A TERRA CLAMA + RUJA O LEÃO",cat:"VS"},{n:52,t:"MEDLEY PODEROSO DEUS",cat:"VS"},{n:53,t:"UMA VEZ",cat:"VS"},{n:54,t:"ATÉ QUE O SENHOR VENHA",cat:"VS"},{n:55,t:"COLOSSENSES E SUAS LINHAS DE AMOR",cat:"VS"},{n:56,t:"MEDLEY RUJA O LEÃO + QUE SE ABRAM OS CÉUS",cat:"VS"},{n:57,t:"ÚNICO",cat:"VS"},{n:58,t:"VIDA AOS SEPULCROS",cat:"VS"},{n:59,t:"EIS QUE ESTOU À PORTA E BATO",cat:"VS"},{n:60,t:"GALILEU",cat:"VS"},{n:61,t:"(MEDLEY) O ESCUDO + SOU UM MILAGRE",cat:"VS"},{n:62,t:"VITORIOSO ÉS",cat:"VS"},{n:63,t:"MARANATA",cat:"VS"},{n:64,t:"TU ÉS DEUS (A ELE)",cat:"VS"},{n:65,t:"ALÉM DO IMPOSSÍVEL",cat:"VS"},{n:66,t:"LINDO MOMENTO",cat:"VS"},{n:67,t:"A MENSAGEM DA CRUZ",cat:"VS"},{n:68,t:"FOGO EM TEUS OLHOS",cat:"VS"},{n:69,t:"UM NOVO DIA",cat:"VS"},{n:70,t:"BENDITO É O REI",cat:"VS"},{n:71,t:"ESTAÇÕES",cat:"VS"},{n:72,t:"AMBIÇÃO",cat:"VS"},{n:73,t:"LEÃO E O CORDEIRO",cat:"VS"},{n:74,t:"(MEDLEY) EU VOU CONSTRUIR + OH QUÃO LINDO ESSE NOME É",cat:"VS"},{n:75,t:"ÚNICO",cat:"VS"},{n:76,t:"ME DERRAMAR",cat:"VS"},{n:77,t:"QUEBRANTADO",cat:"VS"},{n:78,t:"É TUDO SOBRE VOCÊ",cat:"VS"},{n:79,t:"(MEDLEY) MEU RESPIRAR + MEU PRAZER",cat:"VS"},{n:80,t:"ISAÍAS 9",cat:"VS"},{n:81,t:"RENDIDO ESTOU",cat:"VS"},{n:82,t:"EU E MINHA CASA",cat:"VS"},{n:83,t:"NO MEIO DOS LOUVORES DO SEU POVO",cat:"VS"},{n:84,t:"JOÃO 20 + PRA SEMPRE",cat:"VS"},{n:85,t:"ÉS BEM VINDO",cat:"VS"},{n:86,t:"JESUS FILHO DE DEUS",cat:"VS"},{n:87,t:"DIANTE DE TI",cat:"VS"},{n:88,t:"ALGO NOVO VINDO",cat:"VS"},{n:89,t:"TUA ALEGRIA",cat:"VS"},{n:90,t:"REDENTOR",cat:"VS"},{n:91,t:"DEUS DE OBRAS COMPLETAS",cat:"VS"},{n:92,t:"TODOS OS DIAS (A BENÇÃO)",cat:"VS"},{n:93,t:"VEM ESTA É A HORA",cat:"VS"},{n:94,t:"O QUE TUA GLÓRIA FEZ COMIGO",cat:"VS"},{n:95,t:"GRATO SOU",cat:"VS"},{n:96,t:"PRIMEIRA ESSÊNCIA",cat:"VS"},{n:97,t:"CONSAGRAÇÃO",cat:"VS"},{n:98,t:"TE LOUVAREI",cat:"VS"},{n:99,t:"FÉ",cat:"VS"},{n:100,t:"SEU SANGUE",cat:"VS"},{n:101,t:"CAMINHO NO DESERTO",cat:"VS"},{n:102,t:"COM MUITO LOUVOR",cat:"VS"},{n:103,t:"ATRAI O MEU CORAÇÃO",cat:"VS"},{n:104,t:"TEU REINO",cat:"VS"},{n:105,t:"EU SOU LIVRE",cat:"VS"},{n:106,t:"SOU GRATO POR SEU AMOR",cat:"VS"},{n:107,t:"EU NAVEGAREI",cat:"VS"},{n:108,t:"UMA CARTA VIVA",cat:"VS"},{n:109,t:"AMO O SENHOR",cat:"VS"},{n:110,t:"TUDO QUE ME PROMETEU",cat:"VS"},{n:111,t:"CANÇÃO QUE NÃO ENVELHECE",cat:"VS"},{n:112,t:"ME AMA",cat:"VS"},{n:113,t:"TEU TOQUE",cat:"VS"},{n:114,t:"MEU MESTRE",cat:"VS"},{n:115,t:"AH, JESUS + CORAÇÃO IGUAL AO TEU",cat:"VS"},{n:116,t:"NA TERRA COMO NO CÉU",cat:"VS"},{n:117,t:"EU TENHO VOCÊ",cat:"VS"},{n:118,t:"A BENÇÃO",cat:"VS"},{n:119,t:"SOBRE AS ÁGUAS",cat:"VS"},{n:120,t:"CORAÇÃO IGUAL AO TEU",cat:"VS"},{n:121,t:"ROMPENDO EM FÉ",cat:"VS"},{n:122,t:"MARAVILHADO",cat:"VS"},{n:123,t:"EU TAMBÉM (100 BILHÕES X)",cat:"VS"},{n:124,t:"QUERO JESUS",cat:"VS"},{n:125,t:"OUTRO IGUAL NÃO HÁ",cat:"VS"}];
 const STORAGE_KEY = 'lyricplay_slide_suggestions';
 const ADMIN_PWD   = 'LP@2025#slide!';
 
@@ -205,45 +212,44 @@ function getRanking(sug){
 async function submitSuggestion(){
   const music  = document.getElementById('sugMusic').value.trim();
   const artist = document.getElementById('sugArtist').value.trim();
-  const obs    = document.getElementById('sugObs')?document.getElementById('sugObs').value.trim():'';
+  const obsEl  = document.getElementById('sugObs');
+  const obs    = obsEl ? obsEl.value.trim() : '';
   const mEl = document.getElementById('sugMusic');
   const aEl = document.getElementById('sugArtist');
 
-  if(mEl) mEl.classList.remove('error');
-  if(aEl) aEl.classList.remove('error');
-  if(mEl) mEl.style.borderColor='';
-  if(aEl) aEl.style.borderColor='';
+  // Clear errors
+  [mEl,aEl].forEach(el=>{if(el){el.classList.remove('error');el.style.borderColor='';}});
+  hideMsg();
 
-  // Validate fields
   if(!music){ if(mEl) mEl.classList.add('error'); return; }
   if(!artist){ if(aEl) aEl.classList.add('error'); return; }
 
-  // Normalize for comparison
-  function norm(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim(); }
+  function norm(s){
+    return (s||'').toLowerCase().normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .replace(/[^a-z0-9\s]/g,' ')
+      .replace(/\s+/g,' ').trim();
+  }
   const normMusic = norm(music);
 
-  // Check if song already exists in catalog (if songs array is available)
-  if(typeof songs !== 'undefined'){
-    const exists = songs.find(s => norm(s.t) === normMusic);
-    if(exists){
-      if(mEl){ mEl.style.borderColor='rgba(251,191,36,.6)'; }
-      const msgEl = document.getElementById('sugAlreadyExists');
-      if(msgEl){ msgEl.style.display='block'; msgEl.textContent='⚠️ Essa música já está no nosso catálogo! (#'+exists.n+' — '+exists.a+')'; }
-      setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; if(mEl) mEl.style.borderColor=''; }, 5000);
-      return;
-    }
+  // 1. Check if song exists in catalog
+  const catalog = typeof catalogSongs !== 'undefined' ? catalogSongs :
+                  (typeof songs !== 'undefined' ? songs.map(s=>({n:s.n,t:s.t,cat:'Slide'})) : []);
+  const exists = catalog.find(s => norm(s.t) === normMusic ||
+    normMusic.split(' ').filter(w=>w.length>3).every(w=>norm(s.t).includes(w)));
+  if(exists){
+    showMsg('catalog', '🎵 Essa música já está no nosso catálogo! ('+exists.cat+' #'+exists.n+' — '+exists.t+')');
+    if(mEl) mEl.style.borderColor='rgba(251,191,36,.6)';
+    return;
   }
 
-  // Check if user already suggested this song (localStorage anti-duplicate)
+  // 2. Check if already suggested from this device
   const KEY_SENT = 'lyricplay_sent_suggestions';
   let sent = [];
   try{ sent = JSON.parse(localStorage.getItem(KEY_SENT)||'[]'); }catch(e){}
-  const alreadySent = sent.find(s => norm(s) === normMusic);
-  if(alreadySent){
-    if(mEl){ mEl.style.borderColor='rgba(248,113,113,.6)'; }
-    const msgEl = document.getElementById('sugDuplicate');
-    if(msgEl){ msgEl.style.display='block'; }
-    setTimeout(()=>{ if(msgEl) msgEl.style.display='none'; if(mEl) mEl.style.borderColor=''; }, 4000);
+  if(sent.find(s => norm(s) === normMusic)){
+    showMsg('duplicate', '✅ Solicitação já encaminhada! 🔥 Deus abençoe!');
+    if(mEl) mEl.style.borderColor='rgba(242,99,26,.6)';
     return;
   }
 
@@ -261,11 +267,9 @@ async function submitSuggestion(){
     });
   }catch(e){console.warn('SheetDB:',e);}
 
-  // Save to localStorage to prevent duplicate
   sent.push(music);
   try{ localStorage.setItem(KEY_SENT, JSON.stringify(sent)); }catch(e){}
 
-  // Show success
   const sucSec=document.getElementById('sugSuccess')||document.getElementById('successSection');
   const formSec=document.getElementById('formSection');
   if(formSec) formSec.style.display='none';
@@ -276,9 +280,21 @@ async function submitSuggestion(){
     if(sucSec){sucSec.classList.remove('show');sucSec.style.display='none';}
     if(mEl) mEl.value='';
     if(aEl) aEl.value='';
-    const obsEl=document.getElementById('sugObs');
     if(obsEl) obsEl.value='';
+    hideMsg();
   },3500);
+}
+
+function showMsg(type, text){
+  const el = document.getElementById('sugMsg');
+  if(!el) return;
+  el.textContent = text;
+  el.className = 'sug-msg sug-msg--'+(type==='catalog'?'yellow':'orange');
+  el.style.display='flex';
+}
+function hideMsg(){
+  const el = document.getElementById('sugMsg');
+  if(el) el.style.display='none';
 }
 
 function resetForm(){
