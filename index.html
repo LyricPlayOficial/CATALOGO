@@ -532,7 +532,6 @@ header{position:sticky;top:0;z-index:200;background:rgba(24,27,31,.97);backdrop-
 // ═══════════════════════════════════════
 const WHATSAPP = '5551996768711'; // ← coloque o número real
 const ADMIN_PWD = 'LP@2025#slide!'; // ← senha do painel admin (mude para a que quiser)
-const catalogSongs=typeof songs!=='undefined'?songs.map(s=>({n:s.n,t:s.t,cat:'Catálogo'})):[];
 const STORAGE_KEY = 'lyricplay_slide_suggestions';
 const SHOW_PUBLIC_RANKING = false;  // true = mostra ranking público de sugestões
 // ═══════════════════════════════════════
@@ -695,6 +694,7 @@ const songs=[
   {n:191,t:"QUEM É COMO NOSSO DEUS?",a:"NÍVEA SOARES"},
   {n:192,t:"ELE É O LEÃO",a:"REINO MUSIC"},
 ];
+const catalogSongs=songs.map(s=>({n:s.n,t:s.t,cat:'Catálogo'}));
 
 const tabDefs=[
   {l:"Todas",k:"all"},{l:"Natal 🎄",k:"natal"},{l:"FHOP Music",k:"fhop"},
