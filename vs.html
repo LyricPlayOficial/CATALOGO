@@ -316,6 +316,33 @@ header{position:sticky;top:0;z-index:200;background:rgba(24,27,31,.97);backdrop-
 .sug-msg--yellow{background:rgba(251,191,36,.15);border:1.5px solid rgba(251,191,36,.5);color:#fbbf24}
 .sug-msg--orange{background:rgba(242,99,26,.15);border:1.5px solid rgba(242,99,26,.5);color:#f2631a}
 
+
+/* ADMIN TABS & ROWS */
+.ad-tabs{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.ad-tab{flex:1;min-width:180px;height:46px;background:var(--surface);border:1px solid var(--border);color:var(--muted);border-radius:10px;cursor:pointer;font-family:var(--cond);font-weight:900;font-size:14px;letter-spacing:.3px;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s}
+.ad-tab .ad-tab-n{background:var(--muted2);color:var(--white);border-radius:20px;padding:2px 9px;font-size:12px}
+.ad-tab.active{border-color:var(--orange);color:var(--white);background:var(--orange-d)}
+.ad-tab.active .ad-tab-n{background:var(--orange)}
+.ad-tab-hint{font-size:12px;color:var(--muted);font-weight:700;line-height:1.5;margin-bottom:12px}
+.ad-search{width:100%;height:42px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0 14px;color:var(--white);font-family:var(--body);font-size:13px;font-weight:700;outline:none;margin-bottom:12px}
+.ad-search:focus{border-color:rgba(242,99,26,.5)}
+#adminOverlay .admin-row{display:grid;grid-template-columns:34px 1fr auto auto auto;gap:12px;align-items:center;padding:12px 14px}
+.admin-row-rank{font-family:var(--cond);font-size:18px;font-weight:900;color:var(--muted);text-align:center}
+.admin-row-rank.gold{color:#fbbf24}.admin-row-rank.silver{color:#cbd5e1}.admin-row-rank.bronze{color:#d97706}
+.admin-row-song{display:flex;flex-direction:column;gap:3px;min-width:0}
+.admin-row-song strong{font-size:14px;overflow-wrap:anywhere}
+.admin-row-song small{font-size:12px;color:var(--muted);font-weight:700;overflow-wrap:anywhere}
+.admin-row-date{font-size:11px;color:var(--muted);font-weight:700;white-space:nowrap}
+.count-pill{display:inline-block;min-width:34px;text-align:center;padding:4px 8px;border-radius:20px;background:var(--muted2);color:var(--white);font-family:var(--cond);font-size:13px;font-weight:900}
+.match-tag{display:inline-flex;align-items:center;gap:6px;margin-top:4px;font-size:11px;font-weight:800;color:#4ade80;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:6px;padding:3px 8px;width:fit-content;max-width:100%;overflow-wrap:anywhere}
+.match-tag.warn{color:#fbbf24;background:rgba(251,191,36,.1);border-color:rgba(251,191,36,.3)}
+.move-btn{background:transparent;border:1px solid var(--border);color:var(--muted);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:14px;transition:all .18s}
+.move-btn:hover{border-color:var(--orange);color:var(--orange)}
+@media(max-width:560px){#adminOverlay .admin-row{grid-template-columns:28px 1fr auto auto}.admin-row-date{display:none}}
+
+#adminOverlay .admin-table-head{display:none}
+#adminOverlay .admin-row-song strong{white-space:normal}
+#adminOverlay .admin-row-song small{text-transform:none}
 </style>
 </head>
 <body>
@@ -459,10 +486,16 @@ header{position:sticky;top:0;z-index:200;background:rgba(24,27,31,.97);backdrop-
       <button class="admin-close" onclick="closeAdmin()">✕</button>
     </div>
     <div class="admin-stats">
-      <div class="admin-stat"><div class="admin-stat-n" id="adTotal">0</div><div class="admin-stat-l">Total sugestões</div></div>
-      <div class="admin-stat"><div class="admin-stat-n" id="adUniq">0</div><div class="admin-stat-l">Músicas únicas</div></div>
-      <div class="admin-stat"><div class="admin-stat-n" id="adTop">—</div><div class="admin-stat-l">Mais pedida</div></div>
+      <div class="admin-stat"><div class="admin-stat-n" id="adTotal">0</div><div class="admin-stat-l">Total de pedidos</div></div>
+      <div class="admin-stat"><div class="admin-stat-n" id="adPend">0</div><div class="admin-stat-l">Ainda não temos</div></div>
+      <div class="admin-stat"><div class="admin-stat-n" id="adHave">—</div><div class="admin-stat-l">Já temos</div></div>
     </div>
+    <div class="ad-tabs">
+      <button class="ad-tab active" id="tabPend" onclick="setAdminTab('pend')">🎯 Ainda não temos <span class="ad-tab-n" id="tabPendN">0</span></button>
+      <button class="ad-tab" id="tabHave" onclick="setAdminTab('have')">✅ Já temos no catálogo <span class="ad-tab-n" id="tabHaveN">0</span></button>
+    </div>
+    <div class="ad-tab-hint" id="adHint"></div>
+    <input class="ad-search" id="adSearch" placeholder="Filtrar por música ou artista..." oninput="renderAdmin()">
     <div class="admin-table">
       <div class="admin-table-head"><span>#</span><span>Música</span><span>Última sugestão</span><span style="text-align:center">Votos</span></div>
       <div id="adminRows"></div>
@@ -769,15 +802,10 @@ async function submitSuggestion(){
   const catalog = typeof catalogSongs !== 'undefined' ? catalogSongs :
                   (typeof songs !== 'undefined' ? songs.map(s=>({n:s.n,t:s.t,cat:'Slide'})) : []);
   // Exact match only - avoid false positives
-  const exists = catalog.find(s => {
-    const nt = norm(s.t);
-    // Must be exact OR one fully contains the other (very similar title)
-    return nt === normMusic || 
-      (normMusic.length > 8 && nt === normMusic) ||
-      (normMusic.length > 10 && nt.startsWith(normMusic) && nt.length - normMusic.length < 5);
-  });
+  const found = findInCatalog(music, artist, true);
+  const exists = found ? found.entry.song : null;
   if(exists){
-    showMsg('catalog', '🎵 Essa música já está no nosso catálogo! ('+exists.cat+' #'+exists.n+' — '+exists.t+')');
+    showMsg('catalog', '🎵 Essa música já está no nosso catálogo! ('+exists.cat+' #'+exists.n+' — '+exists.t+(exists.a?' · '+exists.a:'')+')');
     if(mEl) mEl.style.borderColor='rgba(251,191,36,.6)';
     return;
   }
@@ -841,91 +869,231 @@ function hideMsg(){
 function openLogin(){document.getElementById('loginOverlay').classList.add('open');setTimeout(()=>document.getElementById('loginPwd').focus(),100);}
 function closeLogin(){document.getElementById('loginOverlay').classList.remove('open');document.getElementById('loginPwd').value='';document.getElementById('loginErr').classList.remove('show');}
 async function doLogin(){const pwd=document.getElementById('loginPwd').value;if(pwd===ADMIN_PWD){closeLogin(); await openAdmin();}else{document.getElementById('loginErr').classList.add('show');document.getElementById('loginPwd').value='';document.getElementById('loginPwd').focus();}}
+const LP_CATALOG=[{n:1,t:"É ELE",a:"DROPS",cat:"Slide"},{n:2,t:"TU ÉS + ÁGUAS PURIFICADORAS",a:"FHOP MUSIC",cat:"Slide"},{n:3,t:"SANTO PRA SEMPRE",a:"GABRIEL GUEDES",cat:"Slide"},{n:4,t:"A ELE A GLÓRIA + PORQUE ELE VIVE",a:"GABRIELA ROCHA",cat:"Slide"},{n:5,t:"GRATIDÃO",a:"FHOP MUSIC",cat:"Slide"},{n:6,t:"BONDADE DE DEUS",a:"ISAIAS SAAD",cat:"Slide"},{n:7,t:"ESTAMOS DE PÉ",a:"MARCUS SALLES",cat:"Slide"},{n:8,t:"CLAMO JESUS",a:"PAULO CÉSAR BARUK",cat:"Slide"},{n:9,t:"JEOVÁ JIREH",a:"ALINE BARROS",cat:"Slide"},{n:10,t:"VEM ME BUSCAR",a:"JEFFERSON E SUELLEN",cat:"Slide"},{n:11,t:"FILHO DO DEUS VIVO",a:"NÍVEA SOARES",cat:"Slide"},{n:12,t:"TEU AMOR NÃO FALHA",a:"NÍVEA SOARES",cat:"Slide"},{n:13,t:"LOUVE",a:"LUKAS AGUSTINHO",cat:"Slide"},{n:14,t:"UMA VEZ",a:"FHOP MUSIC",cat:"Slide"},{n:15,t:"A BOA PARTE",a:"FHOP MUSIC",cat:"Slide"},{n:16,t:"ESCAPE",a:"RENASCER PRAISE",cat:"Slide"},{n:17,t:"MIL GRAUS",a:"RENASCER PRAISE",cat:"Slide"},{n:18,t:"CORDEIRO E LEÃO",a:"JEFFERSON E SUELLEN",cat:"Slide"},{n:19,t:"ACENDE OUTRA VEZ",a:"JEFFERSON E SUELLEN",cat:"Slide"},{n:20,t:"GRAÇA",a:"ISRAEL SALAZAR",cat:"Slide"},{n:21,t:"NADA MAIS",a:"GABRIEL GUEDES",cat:"Slide"},{n:22,t:"O FOGO ARDERÁ",a:"ALEXSANDER LUCIO",cat:"Slide"},{n:23,t:"REACENDE A CHAMA",a:"SUED SILVA",cat:"Slide"},{n:24,t:"SINTO FLUIR",a:"MARCELO MARKES E JULLIANY SOUZA",cat:"Slide"},{n:25,t:"PRA SEMPRE",a:"FERNANDINHO",cat:"Slide"},{n:26,t:"TE ESPERAMOS",a:"SALVAON",cat:"Slide"},{n:27,t:"ALGO NOVO",a:"KEMUEL E LUKAS AGUSTINHO",cat:"Slide"},{n:28,t:"DIGNO É O SENHOR",a:"FELIPE RODRIGUES",cat:"Slide"},{n:29,t:"MEDLEY RUJA O LEÃO + QUE SE ABRAM OS CÉUS",a:"ISAIAS SAAD + NIVEA SOARES",cat:"Slide"},{n:30,t:"AVIVA-NOS / A TERRA CLAMA",a:"RENATA MARIN",cat:"Slide"},{n:31,t:"GRANDE É O SENHOR",a:"ADHEMAR DE CAMPOS",cat:"Slide"},{n:32,t:"NOSSO GENERAL",a:"MATEUS BRITO",cat:"Slide"},{n:33,t:"QUEM É ESSE",a:"JULLIANY SOUZA",cat:"Slide"},{n:34,t:"MOISÉS",a:"FERNANDINHO",cat:"Slide"},{n:35,t:"PRIMEIRA ESSÊNCIA",a:"FELIPE RODRIGUES",cat:"Slide"},{n:36,t:"ME AMA",a:"DIANTE DO TRONO",cat:"Slide"},{n:37,t:"MEIA NOITE",a:"FHOP MUSIC",cat:"Slide"},{n:38,t:"SUBLIME",a:"FHOP MUSIC",cat:"Slide"},{n:40,t:"ATÉ QUE O SENHOR VENHA",a:"CULTURA DO CÉU",cat:"Slide"},{n:41,t:"OH QUÃO LINDO ESSE NOME É",a:"HILLSONG EM PORTUGUÊS",cat:"Slide"},{n:42,t:"A ALEGRIA ESTÁ NO CORAÇÃO",a:"MATEUS BRITO",cat:"Slide"},{n:43,t:"TODA TERRA",a:"GABRIELA ROCHA",cat:"Slide"},{n:44,t:"MEDLEY PODEROSO DEUS",a:"GABRIELA ROCHA",cat:"Slide"},{n:45,t:"TU ÉS DEUS (A ELE)",a:"O CANTO DAS IGREJAS",cat:"Slide"},{n:46,t:"TUDO É PERDA",a:"FELIPE RODRIGUES",cat:"Slide"},{n:47,t:"(MEDLEY) AGNUS DEI + A HONRA, A GLÓRIA + TE EXALTAMOS",a:"GABRIELA ROCHA",cat:"Slide"},{n:48,t:"JESUS EM TUA PRESENÇA",a:"MORADA",cat:"Slide"},{n:49,t:"ÚNICO",a:"FHOP MUSIC",cat:"Slide"},{n:50,t:"ACLAME AO SENHOR",a:"FELIPE RODRIGUES",cat:"Slide"},{n:51,t:"DIGNO DE TUDO + TE EXALTAMOS",a:"EMAÚS MUSIC",cat:"Slide"},{n:52,t:"YAHWEH SE MANIFESTARÁ",a:"MARCOS FREIRE, JULLIANY E LÉO BRANDÃO",cat:"Slide"},{n:53,t:"AO ÚNICO",a:"ALINE BARROS",cat:"Slide"},{n:54,t:"SÓ TU ÉS SANTO",a:"MORADA",cat:"Slide"},{n:55,t:"FOGO EM TEUS OLHOS",a:"MARCOS FREIRE",cat:"Slide"},{n:56,t:"ÚNICO",a:"FERNANDINHO",cat:"Slide"},{n:57,t:"EMAÚS",a:"MORADA",cat:"Slide"},{n:58,t:"ME ATRAIU",a:"GABRIELA ROCHA",cat:"Slide"},{n:59,t:"MEDLEY LEÃO DE JUDÁ",a:"MORADA",cat:"Slide"},{n:60,t:"VITORIOSO ÉS",a:"GABRIEL GUEDES",cat:"Slide"},{n:61,t:"ALÉM DO IMPOSSÍVEL",a:"FELIPE RODRIGUES",cat:"Slide"},{n:62,t:"VIDA AOS SEPULCROS",a:"GABRIELA ROCHA",cat:"Slide"},{n:63,t:"COLOSSENSES E SUAS LINHAS DE AMOR",a:"FHOP MUSIC",cat:"Slide"},{n:64,t:"CANÇÃO AO CORDEIRO",a:"ISRAEL SALAZAR E GABRIEL GUEDES",cat:"Slide"},{n:65,t:"(MEDLEY) PODE MORAR AQUI + A TERRA CLAMA + RUJA O LEÃO",a:"THEO RUBIA",cat:"Slide"},{n:66,t:"CANÇÃO QUE NÃO ENVELHECE",a:"JULLIANY SOUZA",cat:"Slide"},{n:67,t:"COMO FLECHA",a:"CAROL BRAGA",cat:"Slide"},{n:68,t:"FÉ",a:"FHOP MUSIC",cat:"Slide"},{n:69,t:"(MEDLEY) NADA ALÉM DO SANGUE + PRA SEMPRE + OH QUÃO LINDO",a:"THEO RUBIA",cat:"Slide"},{n:70,t:"LINDO MOMENTO",a:"JULLIANY SOUZA",cat:"Slide"},{n:71,t:"GALILEU",a:"FERNANDINHO",cat:"Slide"},{n:72,t:"ALFA E ÔMEGA",a:"MARINE FRIESEN",cat:"Slide"},{n:73,t:"EIS QUE ESTOU À PORTA E BATO",a:"FERNANDINHO",cat:"Slide"},{n:74,t:"(MEDLEY) O ESCUDO + SOU UM MILAGRE",a:"LUKAS AGUSTINHO",cat:"Slide"},{n:75,t:"ELE REINA",a:"JEFFERSON E SUELLEN",cat:"Slide"},{n:76,t:"CANÇÃO DO APOCALIPSE",a:"DIANTE DO TRONO",cat:"Slide"},{n:77,t:"CÉU E TERRA SE ENCONTRAM",a:"CULTURA DO CÉU",cat:"Slide"},{n:78,t:"MINHAS GUERRAS",a:"BRASA CHURCH",cat:"Slide"},{n:79,t:"REDENTOR",a:"MARCELO MARKES E SARAH BEATRIZ",cat:"Slide"},{n:80,t:"HÁ PODER",a:"FHOP MUSIC",cat:"Slide"},{n:81,t:"MARANATA",a:"COLETIVO ADORAÇÃO",cat:"Slide"},{n:82,t:"EU TENHO VOCÊ",a:"MARCELO MARKES",cat:"Slide"},{n:83,t:"HOSANA",a:"JULLIANY SOUZA",cat:"Slide"},{n:84,t:"BENDITO É O REI",a:"FHOP MUSIC",cat:"Slide"},{n:85,t:"A MENSAGEM DA CRUZ",a:"ALINE BARROS",cat:"Slide"},{n:86,t:"GRATO SOU",a:"O CANTO DAS IGREJAS",cat:"Slide"},{n:87,t:"ÉS BEM VINDO",a:"ISRAEL SALAZAR",cat:"Slide"},{n:88,t:"(MEDLEY) MEU RESPIRAR + MEU PRAZER",a:"GABI SAMPAIO",cat:"Slide"},{n:89,t:"(MEDLEY) EU VOU CONSTRUIR + OH QUÃO LINDO ESSE NOME É",a:"GABI SAMPAIO",cat:"Slide"},{n:90,t:"ALGO NOVO VINDO",a:"GET WORSHIP",cat:"Slide"},{n:91,t:"ALÉM DO RIO AZUL",a:"VERSÃO JULIA VITORIA",cat:"Slide"},{n:92,t:"ESTAÇÕES",a:"MATHEUS GONÇALVES + MATEUS BRITO / DUNAMIS MUSIC",cat:"Slide"},{n:93,t:"MARAVILHOSA GRAÇA",a:"VERSÃO DROPS",cat:"Slide"},{n:94,t:"PAI NOSSO",a:"MINISTÉRIO PEDRAS VIVAS",cat:"Slide"},{n:95,t:"É TUDO SOBRE VOCÊ",a:"MORADA",cat:"Slide"},{n:96,t:"YESHUA",a:"FERNANDINHO",cat:"Slide"},{n:97,t:"FOGO NÃO QUEIMA FOGO",a:"ANNA CLARA ROCHA",cat:"Slide"},{n:98,t:"QUEBRANTADO",a:"VINEYARD PIRATININGA FEAT. BRUNÃO MORADA",cat:"Slide"},{n:99,t:"LEÃO E O CORDEIRO",a:"MARCUS SALLES",cat:"Slide"},{n:100,t:"UM NOVO DIA",a:"GET WORSHIP",cat:"Slide"},{n:101,t:"NA TERRA COMO NO CÉU",a:"GABI SAMPAIO FEAT. WESLEY SANTOS",cat:"Slide"},{n:102,t:"JOÃO 20 + PRA SEMPRE",a:"VITOR SANTANA",cat:"Slide"},{n:103,t:"RENDIDO ESTOU",a:"ISAIAS SAAD + DÉBORA BUZAS",cat:"Slide"},{n:104,t:"NO MEIO DOS LOUVORES DO SEU POVO",a:"ISRAEL SALAZAR",cat:"Slide"},{n:105,t:"TUDO É TEU",a:"DROPS",cat:"Slide"},{n:106,t:"SEJA O CENTRO",a:"GABI SAMPAIO",cat:"Slide"},{n:107,t:"AMBIÇÃO",a:"GABI SAMPAIO",cat:"Slide"},{n:108,t:"TUA IGREJA CANTA A TI",a:"ISRAEL SALAZAR",cat:"Slide"},{n:109,t:"A ALEGRIA DO SENHOR",a:"THEO RUBIA (AO VIVO #MARANATA)",cat:"Slide"},{n:110,t:"ATOS 2",a:"GABRIELA ROCHA",cat:"Slide"},{n:111,t:"ME DERRAMAR",a:"VINEYARD PIRATININGA FEAT. GUILHERME ANDRADE",cat:"Slide"},{n:112,t:"PRECISO DE TI",a:"VERSÃO - JULLIANY SOUZA (MOMENTOS)",cat:"Slide"},{n:113,t:"NÃO SEREMOS ABALADOS",a:"NÍVEA SOARES",cat:"Slide"},{n:114,t:"ISAÍAS 9",a:"VERSÃO - ADORAÇÃO CENTRAL",cat:"Slide"},{n:115,t:"NASCEU EM BELÉM",a:"ISRAEL SALAZAR",cat:"Slide"},{n:116,t:"O FILHO DE DEUS",a:"FHOP MUSIC",cat:"Slide"},{n:117,t:"É NATAL",a:"ISRAEL SALAZAR",cat:"Slide"},{n:118,t:"Ó NOITE SANTA",a:"FHOP MUSIC",cat:"Slide"},{n:119,t:"DIANTE DE TI",a:"THEO RUBIA",cat:"Slide"},{n:120,t:"DANÇAR NA CHUVA",a:"FERNANDINHO",cat:"Slide"},{n:121,t:"EU SOU TEU PAI",a:"VALESCA MAYSSA",cat:"Slide"},{n:122,t:"JESUS FILHO DE DEUS",a:"FERNANDINHO",cat:"Slide"},{n:123,t:"EU E MINHA CASA",a:"JULLIANY SOUZA & LÉO BRANDÃO",cat:"Slide"},{n:124,t:"PAZ SEM FIM (NADA QUEBRADO)",a:"CAROL BRAGA",cat:"Slide"},{n:125,t:"NOVA HISTÓRIA",a:"FAMILY WORSHIP E DELINO MARÇAL",cat:"Slide"},{n:126,t:"EU VOU VIVER UMA VIRADA",a:"MINISTÉRIO APASCENTAR DE NOVA IGUAÇU",cat:"Slide"},{n:127,t:"A BENÇÃO",a:"GABRIEL GUEDES + NÍVEA SOARES",cat:"Slide"},{n:128,t:"ENCHE-ME",a:"ISAÍAS SAAD + GABRIELA ROCHA",cat:"Slide"},{n:129,t:"SENHOR TU ÉS BOM",a:"VERSÃO COMUNIDADE ZONA SUL",cat:"Slide"},{n:130,t:"INDESCULPÁVEL",a:"FHOP MUSIC",cat:"Slide"},{n:131,t:"MEDLEY CRISTO + TUDO É TEU",a:"FHOP MUSIC",cat:"Slide"},{n:132,t:"OCEANOS",a:"ANA NÓBREGA / HILLSONG VERSÃO PORTUGUÊS",cat:"Slide"},{n:133,t:"MILAGRES",a:"JULIANO SON",cat:"Slide"},{n:134,t:"DEUS DE OBRAS COMPLETAS",a:"KEMILLY SANTOS",cat:"Slide"},{n:135,t:"CAMINHO NO DESERTO",a:"NÍVEA SOARES",cat:"Slide"},{n:136,t:"TUA ALEGRIA",a:"DROPS",cat:"Slide"},{n:137,t:"ATRAI O MEU CORAÇÃO",a:"VERSÃO IGOR ZOLLA (BRAVE CAMP)",cat:"Slide"},{n:138,t:"EU SOU LIVRE",a:"VERSÃO COMUNIDADE DA GRAÇA (O CANTO DAS IGREJAS)",cat:"Slide"},{n:139,t:"PRA ONDE EU IREI?",a:"MORADA",cat:"Slide"},{n:140,t:"TODOS OS DIAS (A BENÇÃO)",a:"O CANTO DAS IGREJAS",cat:"Slide"},{n:141,t:"O CÉU É O MEU LUGAR",a:"THEO RUBIA",cat:"Slide"},{n:142,t:"ELE É EXALTADO",a:"CENTRAL MSC FEAT. FHOP MUSIC",cat:"Slide"},{n:143,t:"O QUE TUA GLÓRIA FEZ COMIGO",a:"LEO FONSECA E NÍVEA SOARES",cat:"Slide"},{n:144,t:"VEM ESTA É A HORA",a:"VINEYARD PIRATININGA, O CANTO DAS IGREJAS",cat:"Slide"},{n:145,t:"CONSAGRAÇÃO",a:"ALINE BARROS",cat:"Slide"},{n:146,t:"A CASA É SUA",a:"CASA WORSHIP",cat:"Slide"},{n:147,t:"SOBRE AS ÁGUAS",a:"VERSÃO FELIPE RODRIGUES",cat:"Slide"},{n:148,t:"SEU SANGUE",a:"FERNANDINHO",cat:"Slide"},{n:149,t:"VITÓRIA NO DESERTO",a:"ALINE BARROS",cat:"Slide"},{n:150,t:"TE LOUVAREI",a:"VERSÃO CENTRAL MSC",cat:"Slide"},{n:151,t:"COM MUITO LOUVOR",a:"VERSÃO CASSIANE E BRUNA KARLA",cat:"Slide"},{n:152,t:"TUDO QUE ME PROMETEU",a:"ISRAEL SALAZAR",cat:"Slide"},{n:153,t:"TEU REINO",a:"VINICIUS ZULATO E CRISTO VIVO",cat:"Slide"},{n:154,t:"SOU GRATO POR SEU AMOR",a:"GET WORSHIP",cat:"Slide"},{n:155,t:"VENHAM À MESA",a:"O CANTO DAS IGREJAS",cat:"Slide"},{n:156,t:"EU NAVEGAREI",a:"GABRIELA ROCHA",cat:"Slide"},{n:157,t:"QUE JESUS SEJA O NOME",a:"GET WORSHIP",cat:"Slide"},{n:158,t:"OUTRO IGUAL NÃO HÁ (AO REI NÓS COROAMOS)",a:"GABRIEL GUEDES",cat:"Slide"},{n:159,t:"ERA EU",a:"JULLIANY SOUZA",cat:"Slide"},{n:160,t:"UMA CARTA VIVA",a:"GET WORSHIP",cat:"Slide"},{n:161,t:"MELHOR LUGAR",a:"FELIPE RODRIGUES",cat:"Slide"},{n:162,t:"BOM PERFUME",a:"GABI SAMPAIO",cat:"Slide"},{n:163,t:"MESSIAS",a:"MARCELO MARKES",cat:"Slide"},{n:164,t:"AMO O SENHOR",a:"VERSÃO FELIPE RODRIGUES & MARCUS SALLES",cat:"Slide"},{n:165,t:"LUGAR SECRETO (EP CÉU)",a:"GABRIELA ROCHA",cat:"Slide"},{n:166,t:"OS QUE CONFIAM",a:"FERNANDINHO",cat:"Slide"},{n:167,t:"EIS-ME AQUI",a:"VALESCA MAYSSA",cat:"Slide"},{n:168,t:"TUA PRESENÇA VALE MAIS",a:"MATEUS BRITO",cat:"Slide"},{n:169,t:"TEU TOQUE",a:"GABI SAMPAIO E NÍVEA SOARES",cat:"Slide"},{n:170,t:"QUE SE ABRAM OS CÉUS",a:"NÍVEA SOARES",cat:"Slide"},{n:171,t:"MEU MESTRE",a:"VERSÃO GET WORSHIP",cat:"Slide"},{n:172,t:"EU TAMBÉM (100 BILHÕES X)",a:"ISAIAS SAAD",cat:"Slide"},{n:173,t:"GRANDE É O SENHOR (AGITADA)",a:"ALTOMANTE DAVI SILVA",cat:"Slide"},{n:174,t:"ETERNO DEUS (EVERLASTING GOD)",a:"IBAB CELEBRAÇÃO",cat:"Slide"},{n:175,t:"AH, JESUS + CORAÇÃO IGUAL AO TEU",a:"JULLIANY SOUZA",cat:"Slide"},{n:176,t:"LEVANTO UM ALELUIA",a:"DIANTE DO TRONO FEAT ISAÍAS SAAD",cat:"Slide"},{n:177,t:"ELE VEM",a:"GABRIEL GUEDES FEAT GABRIELA ROCHA",cat:"Slide"},{n:178,t:"CORAÇÃO IGUAL AO TEU",a:"VERSÃO COM CRISTO",cat:"Slide"},{n:179,t:"MARAVILHADO",a:"NÍVEA SOARES",cat:"Slide"},{n:180,t:"ROMPENDO EM FÉ",a:"VERSÃO GABRIELA ROCHA",cat:"Slide"},{n:181,t:"EM TEUS BRAÇOS",a:"VERSÃO JULIA VITÓRIA (ACÚSTICO)",cat:"Slide"},{n:182,t:"QUERO CONHECER JESUS",a:"CIA. SALT",cat:"Slide"},{n:183,t:"SOBRE AS ÁGUAS",a:"DUNAMIS MUSIC",cat:"Slide"},{n:184,t:"PELO REI",a:"JULIANE NOGUEIRA",cat:"Slide"},{n:185,t:"SALVA-ME, Ó DEUS",a:"GET WORSHIP",cat:"Slide"},{n:186,t:"QUERO JESUS",a:"CENTRAL 3",cat:"Slide"},{n:187,t:"TODAVIA ME ALEGRAREI",a:"SARAH BEATRIZ",cat:"Slide"},{n:188,t:"INCENSÁRIO",a:"LAURA SOUGUELLIS",cat:"Slide"},{n:189,t:"EM TEU NOME",a:"FAMILY WORSHIP",cat:"Slide"},{n:190,t:"GRAÇA",a:"REINO MUSIC",cat:"Slide"},{n:191,t:"QUEM É COMO NOSSO DEUS?",a:"NÍVEA SOARES",cat:"Slide"},{n:192,t:"ELE É O LEÃO",a:"REINO MUSIC",cat:"Slide"},{n:193,t:"CANÇÃO DE SIMEÃO",a:"DROPS",cat:"Slide"},{n:194,t:"EU SÓ QUERO TUA PRESENÇA",a:"THEO RUBIA E MARCELO MARKES",cat:"Slide"},{n:195,t:"CANÇÃO DOS REDIMIDOS",a:"JULIA VITÓRIA E NÍVEA SOARES",cat:"Slide"},{n:196,t:"PALAVRAS",a:"VERSÃO CAROL BRAGA",cat:"Slide"},{n:197,t:"QUEM DIZES QUE EU SOU",a:"HILLSONG EM PORTUGUÊS",cat:"Slide"},{n:198,t:"LIVRE!",a:"MORADA",cat:"Slide"},{n:199,t:"ATÉ QUE ELE VENHA",a:"ALEXANDRE MAGNANI",cat:"Slide"},{n:200,t:"QUANDO ELE VEM",a:"ANDRÉ AQUINO",cat:"Slide"},{n:201,t:"DEIXA QUEIMAR",a:"ALESSANDRO VILAS BOAS / SOM DO REINO",cat:"Slide"},{n:202,t:"SOMOS UM",a:"SALZBAND",cat:"Slide"},{n:203,t:"A CRISTO SEJA A GLÓRIA",a:"JULLIANY SOUZA, GABRIELA ROCHA",cat:"Slide"},{n:204,t:"DONO DA MINHA AFEIÇÃO",a:"FHOP MUSIC",cat:"Slide"},{n:205,t:"HINO DA VITÓRIA",a:"VERSÃO JADSON MORENO",cat:"Slide"},{n:206,t:"ELE É DEUS",a:"GET WORSHIP",cat:"Slide"},{n:207,t:"CRISTO VENCEU",a:"(IPALPHA) NOVO CANTO",cat:"Slide"},{n:208,t:"OUSADO AMOR",a:"ISAIAS SAAD",cat:"Slide"},{n:209,t:"QUE ELE CRESÇA",a:"NÍVEA SOARES + NATHANAEL BRITO",cat:"Slide"},{n:210,t:"O FOGO NUNCA DORME",a:"VERSÃO JADSON MORENO",cat:"Slide"},{n:211,t:"NOSSO CORAÇÃO QUEIMA",a:"FHOP MUSIC",cat:"Slide"},{n:212,t:"DIANTE DA CRUZ",a:"VERSÃO COM CRISTO",cat:"Slide"},{n:213,t:"OS PLANOS DE DEUS",a:"SAMUEL MESSIAS",cat:"Slide"},{n:214,t:"TRIBUTO A IEHOVAH",a:"GABRIEL GUEDES",cat:"Slide"},{n:1,t:"A ELE A GLÓRIA + PORQUE ELE VIVE",a:"GABRIELA ROCHA",cat:"VS"},{n:2,t:"É ELE",a:"DROPS",cat:"VS"},{n:3,t:"GRATIDÃO",a:"GUILHERME BAPTISTA",cat:"VS"},{n:4,t:"SANTO PRA SEMPRE",a:"GABRIEL GUEDES",cat:"VS"},{n:5,t:"TU ÉS + ÁGUAS PURIFICADORAS",a:"FHOP MUSIC",cat:"VS"},{n:6,t:"BARULHO DE FESTA",a:"ISRAEL SALAZAR",cat:"VS"},{n:7,t:"BONDADE DE DEUS",a:"ISAIAS SAAD",cat:"VS"},{n:8,t:"CLAMO JESUS",a:"PAULO CÉSAR BARUK",cat:"VS"},{n:9,t:"ESTAMOS DE PÉ",a:"MARCUS SALLES",cat:"VS"},{n:10,t:"JESUS É PODEROSO",a:"ISRAEL SALAZAR",cat:"VS"},{n:11,t:"FILHO DO DEUS VIVO",a:"NÍVEA SOARES",cat:"VS"},{n:12,t:"JEOVÁ JIREH",a:"ALINE BARROS",cat:"VS"},{n:13,t:"LOUVE",a:"LUKAS AGUSTINHO",cat:"VS"},{n:14,t:"TEU AMOR NÃO FALHA",a:"NÍVEA SOARES",cat:"VS"},{n:15,t:"VEM ME BUSCAR",a:"JEFFERSON E SUELLEN",cat:"VS"},{n:16,t:"A BOA PARTE",a:"FHOP MUSIC",cat:"VS"},{n:17,t:"ESCAPE",a:"VERSÃO CAROL BRAGA",cat:"VS"},{n:18,t:"EU SOU TEU PAI",a:"VALESCA MAYSSA",cat:"VS"},{n:19,t:"MIL GRAUS",a:"RENASCER PRAISE",cat:"VS"},{n:20,t:"ACENDE OUTRA VEZ",a:"JEFFERSON E SUELLEN",cat:"VS"},{n:21,t:"CORDEIRO E LEÃO",a:"JEFFERSON E SUELLEN",cat:"VS"},{n:22,t:"GRAÇA",a:"ISRAEL SALAZAR",cat:"VS"},{n:23,t:"NADA MAIS",a:"GABRIEL GUEDES",cat:"VS"},{n:24,t:"O FOGO ARDERÁ",a:"ALEXSANDER LUCIO",cat:"VS"},{n:25,t:"EU TO NO CULTO",a:"ISRAEL SALAZAR",cat:"VS"},{n:26,t:"PRA SEMPRE",a:"FERNANDINHO",cat:"VS"},{n:27,t:"REACENDE A CHAMA",a:"SUED SILVA",cat:"VS"},{n:28,t:"SINTO FLUIR",a:"MARCELO MARKES E JULLIANY SOUZA",cat:"VS"},{n:29,t:"TE ESPERAMOS",a:"SALVAON",cat:"VS"},{n:30,t:"ALGO NOVO",a:"KEMUEL E LUKAS AGUSTINHO",cat:"VS"},{n:31,t:"DIGNO É O SENHOR",a:"FELIPE RODRIGUES",cat:"VS"},{n:32,t:"GRANDE É O SENHOR",a:"ADHEMAR DE CAMPOS",cat:"VS"},{n:33,t:"MOISÉS",a:"FERNANDINHO",cat:"VS"},{n:34,t:"NOSSO GENERAL",a:"MATEUS BRITO",cat:"VS"},{n:36,t:"MEIA NOITE",a:"FHOP MUSIC",cat:"VS"},{n:37,t:"QUEM É ESSE",a:"JULLIANY SOUZA",cat:"VS"},{n:38,t:"SUBLIME",a:"FHOP MUSIC",cat:"VS"},{n:39,t:"TODA TERRA",a:"GABRIELA ROCHA",cat:"VS"},{n:40,t:"A ALEGRIA ESTÁ NO CORAÇÃO",a:"MATEUS BRITO",cat:"VS"},{n:41,t:"ACLAME AO SENHOR",a:"FELIPE RODRIGUES",cat:"VS"},{n:42,t:"DIGNO DE TUDO + TE EXALTAMOS",a:"MATEUS BRITO",cat:"VS"},{n:43,t:"OH QUÃO LINDO ESSE NOME É",a:"HILLSONG EM PORTUGUÊS",cat:"VS"},{n:44,t:"TUDO É PERDA",a:"FELIPE RODRIGUES",cat:"VS"},{n:45,t:"(MEDLEY) AGNUS DEI + A HONRA, A GLÓRIA + TE EXALTAMOS",a:"GABRIELA ROCHA",cat:"VS"},{n:46,t:"CANÇÃO AO CORDEIRO",a:"ISRAEL SALAZAR E GABRIEL GUEDES",cat:"VS"},{n:47,t:"EMAÚS",a:"MORADA",cat:"VS"},{n:48,t:"JESUS EM TUA PRESENÇA",a:"MORADA",cat:"VS"},{n:49,t:"SÓ TU ÉS SANTO",a:"MORADA",cat:"VS"},{n:50,t:"AVIVA-NOS / A TERRA CLAMA",a:"RENATA MARIN",cat:"VS"},{n:51,t:"(MEDLEY) PODE MORAR AQUI + A TERRA CLAMA + RUJA O LEÃO",a:"THEO RUBIA",cat:"VS"},{n:52,t:"MEDLEY PODEROSO DEUS",a:"GABRIELA ROCHA",cat:"VS"},{n:53,t:"UMA VEZ",a:"FHOP MUSIC",cat:"VS"},{n:54,t:"ATÉ QUE O SENHOR VENHA",a:"CULTURA DO CÉU",cat:"VS"},{n:55,t:"COLOSSENSES E SUAS LINHAS DE AMOR",a:"FHOP MUSIC",cat:"VS"},{n:56,t:"MEDLEY RUJA O LEÃO + QUE SE ABRAM OS CÉUS",a:"ISAIAS SAAD + NIVEA SOARES",cat:"VS"},{n:57,t:"ÚNICO",a:"FHOP MUSIC",cat:"VS"},{n:58,t:"VIDA AOS SEPULCROS",a:"GABRIELA ROCHA",cat:"VS"},{n:59,t:"EIS QUE ESTOU À PORTA E BATO",a:"FERNANDINHO",cat:"VS"},{n:60,t:"GALILEU",a:"FERNANDINHO",cat:"VS"},{n:61,t:"(MEDLEY) O ESCUDO + SOU UM MILAGRE",a:"LUKAS AGUSTINHO",cat:"VS"},{n:62,t:"VITORIOSO ÉS",a:"GABRIEL GUEDES",cat:"VS"},{n:63,t:"MARANATA",a:"COLETIVO ADORAÇÃO",cat:"VS"},{n:64,t:"TU ÉS DEUS (A ELE)",a:"O CANTO DAS IGREJAS",cat:"VS"},{n:65,t:"ALÉM DO IMPOSSÍVEL",a:"FELIPE RODRIGUES",cat:"VS"},{n:66,t:"LINDO MOMENTO",a:"JULLIANY SOUZA",cat:"VS"},{n:67,t:"A MENSAGEM DA CRUZ",a:"ALINE BARROS",cat:"VS"},{n:68,t:"FOGO EM TEUS OLHOS",a:"MARCOS FREIRE",cat:"VS"},{n:69,t:"UM NOVO DIA",a:"GET WORSHIP",cat:"VS"},{n:70,t:"BENDITO É O REI",a:"FHOP MUSIC",cat:"VS"},{n:71,t:"ESTAÇÕES",a:"MATHEUS GONÇALVES + MATEUS BRITO / DUNAMIS MUSIC",cat:"VS"},{n:72,t:"AMBIÇÃO",a:"GABI SAMPAIO",cat:"VS"},{n:73,t:"LEÃO E O CORDEIRO",a:"MARCUS SALLES",cat:"VS"},{n:74,t:"(MEDLEY) EU VOU CONSTRUIR + OH QUÃO LINDO ESSE NOME É",a:"GABRIELA ROCHA",cat:"VS"},{n:75,t:"ÚNICO",a:"FERNANDINHO",cat:"VS"},{n:76,t:"ME DERRAMAR",a:"VINEYARD PIRATININGA FEAT. GUILHERME ANDRADE",cat:"VS"},{n:77,t:"QUEBRANTADO",a:"VINEYARD PIRATININGA FEAT. BRUNÃO MORADA",cat:"VS"},{n:78,t:"É TUDO SOBRE VOCÊ",a:"MORADA",cat:"VS"},{n:79,t:"(MEDLEY) MEU RESPIRAR + MEU PRAZER",a:"GABI SAMPAIO",cat:"VS"},{n:80,t:"ISAÍAS 9",a:"VERSÃO - ADORAÇÃO CENTRAL",cat:"VS"},{n:81,t:"RENDIDO ESTOU",a:"ISAIAS SAAD + DÉBORA BUZAS",cat:"VS"},{n:82,t:"EU E MINHA CASA",a:"JULLIANY SOUZA & LÉO BRANDÃO",cat:"VS"},{n:83,t:"NO MEIO DOS LOUVORES DO SEU POVO",a:"ISRAEL SALAZAR",cat:"VS"},{n:84,t:"JOÃO 20 + PRA SEMPRE",a:"VITOR SANTANA",cat:"VS"},{n:85,t:"ÉS BEM VINDO",a:"ISRAEL SALAZAR",cat:"VS"},{n:86,t:"JESUS FILHO DE DEUS",a:"FERNANDINHO",cat:"VS"},{n:87,t:"DIANTE DE TI",a:"THEO RUBIA",cat:"VS"},{n:88,t:"ALGO NOVO VINDO",a:"GET WORSHIP",cat:"VS"},{n:89,t:"TUA ALEGRIA",a:"DROPS",cat:"VS"},{n:90,t:"REDENTOR",a:"MARCELO MARKES E SARAH BEATRIZ",cat:"VS"},{n:91,t:"DEUS DE OBRAS COMPLETAS",a:"KEMILLY SANTOS",cat:"VS"},{n:92,t:"TODOS OS DIAS (A BENÇÃO)",a:"O CANTO DAS IGREJAS",cat:"VS"},{n:93,t:"VEM ESTA É A HORA",a:"VINEYARD PIRATININGA, O CANTO DAS IGREJAS",cat:"VS"},{n:94,t:"O QUE TUA GLÓRIA FEZ COMIGO",a:"LEO FONSECA E NÍVEA SOARES",cat:"VS"},{n:95,t:"GRATO SOU",a:"DROPS",cat:"VS"},{n:96,t:"PRIMEIRA ESSÊNCIA",a:"FELIPE RODRIGUES",cat:"VS"},{n:97,t:"CONSAGRAÇÃO",a:"ALINE BARROS",cat:"VS"},{n:98,t:"TE LOUVAREI",a:"VERSÃO CENTRAL MSC",cat:"VS"},{n:99,t:"FÉ",a:"FHOP MUSIC",cat:"VS"},{n:100,t:"SEU SANGUE",a:"FERNANDINHO",cat:"VS"},{n:101,t:"CAMINHO NO DESERTO",a:"NÍVEA SOARES",cat:"VS"},{n:102,t:"COM MUITO LOUVOR",a:"VERSÃO CASSIANE E BRUNA KARLA",cat:"VS"},{n:103,t:"ATRAI O MEU CORAÇÃO",a:"VERSÃO IGOR ZOLLA (BRAVE CAMP)",cat:"VS"},{n:104,t:"TEU REINO",a:"VINICIUS ZULATO E CRISTO VIVO",cat:"VS"},{n:105,t:"EU SOU LIVRE",a:"VERSÃO COMUNIDADE DA GRAÇA (O CANTO DAS IGREJAS)",cat:"VS"},{n:106,t:"SOU GRATO POR SEU AMOR",a:"GET WORSHIP",cat:"VS"},{n:107,t:"EU NAVEGAREI",a:"GABRIELA ROCHA",cat:"VS"},{n:108,t:"UMA CARTA VIVA",a:"GET WORSHIP",cat:"VS"},{n:109,t:"AMO O SENHOR",a:"VERSÃO FELIPE RODRIGUES & MARCUS SALLES",cat:"VS"},{n:110,t:"TUDO QUE ME PROMETEU",a:"ISRAEL SALAZAR",cat:"VS"},{n:111,t:"CANÇÃO QUE NÃO ENVELHECE",a:"JULLIANY SOUZA",cat:"VS"},{n:112,t:"ME AMA",a:"ISRAEL SALAZAR",cat:"VS"},{n:113,t:"TEU TOQUE",a:"GABI SAMPAIO E NÍVEA SOARES",cat:"VS"},{n:114,t:"MEU MESTRE",a:"VERSÃO GET WORSHIP",cat:"VS"},{n:115,t:"AH, JESUS + CORAÇÃO IGUAL AO TEU",a:"JULLIANY SOUZA",cat:"VS"},{n:116,t:"NA TERRA COMO NO CÉU",a:"GABI SAMPAIO FEAT. WESLEY SANTOS",cat:"VS"},{n:117,t:"EU TENHO VOCÊ",a:"MARCELO MARKES",cat:"VS"},{n:118,t:"A BENÇÃO",a:"GABRIEL GUEDES + NÍVEA SOARES",cat:"VS"},{n:119,t:"SOBRE AS ÁGUAS",a:"VERSÃO FELIPE RODRIGUES",cat:"VS"},{n:120,t:"CORAÇÃO IGUAL AO TEU",a:"VERSÃO COM CRISTO",cat:"VS"},{n:121,t:"ROMPENDO EM FÉ",a:"VERSÃO GABRIELA ROCHA",cat:"VS"},{n:122,t:"MARAVILHADO",a:"NÍVEA SOARES",cat:"VS"},{n:123,t:"EU TAMBÉM (100 BILHÕES X)",a:"ISAIAS SAAD",cat:"VS"},{n:124,t:"QUERO JESUS",a:"CENTRAL 3",cat:"VS"},{n:125,t:"OUTRO IGUAL NÃO HÁ",a:"GABRIEL GUEDES",cat:"VS"},{n:126,t:"EU SÓ QUERO TUA PRESENÇA",a:"THEO RUBIA E MARCELO MARKES",cat:"VS"},{n:127,t:"PALAVRAS",a:"VERSÃO CAROL BRAGA",cat:"VS"},{n:128,t:"HINO DA VITÓRIA",a:"VERSÃO JADSON MORENO",cat:"VS"},{n:129,t:"OUSADO AMOR",a:"ISAIAS SAAD",cat:"VS"},{n:130,t:"QUE ELE CRESÇA",a:"NÍVEA SOARES + NATHANAEL BRITO",cat:"VS"}];
+// ── MATCH COM O CATÁLOGO ────────────────────────────────────────────
+function normT(s){
+  return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+}
+// Nomes alternativos (inglês / grafias comuns) → título do catálogo
+const TITLE_ALIASES={
+  'oceans':'oceanos','way maker':'caminho no deserto','waymaker':'caminho no deserto',
+  'everlasting god':'eterno deus','goodness of god':'bondade de deus','agnus dei':'agnus dei',
+  'jeova jire':'jeova jireh','jireh':'jeova jireh','raise a hallelujah':'levanto um aleluia',
+  'king of kings':'outro igual nao ha','amazing grace':'maravilhosa graca'
+};
+function levenshtein(a,b){
+  if(a===b) return 0;
+  const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,i)=>i);
+  for(let i=1;i<=m;i++){
+    const cur=[i];
+    for(let j=1;j<=n;j++) cur[j]=Math.min(prev[j]+1,cur[j-1]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    prev=cur;
+  }
+  return prev[n];
+}
+function similar(a,b){ const L=Math.max(a.length,b.length); return L?1-levenshtein(a,b)/L:0; }
+
+// Índice do catálogo: título inteiro, título sem parênteses, texto entre parênteses e partes de medley
+let _catIndex=null;
+function buildCatIndex(){
+  const idx=[];
+  LP_CATALOG.forEach(song=>{
+    const raw=song.t;
+    const add=(txt,kind)=>{const k=normT(txt).replace(/^medley\s+/,'').trim(); if(k.length>=3) idx.push({key:k,kind,song});};
+    add(raw,'full');
+    const noPar=raw.replace(/\([^)]*\)/g,' ');
+    add(noPar,'full');
+    (raw.match(/\(([^)]*)\)/g)||[]).forEach(p=>{ if(!/medley/i.test(p)) add(p.replace(/[()]/g,''),'alias'); });
+    const parts=noPar.split(/\s*[+\/]\s*/);
+    if(parts.length>1) parts.forEach(p=>add(p,'part'));
+  });
+  _catIndex=idx; return idx;
+}
+// strict=true → só match exato (usado no formulário público)
+function findInCatalog(title, artist, strict){
+  const idx=_catIndex||buildCatIndex();
+  let q=normT(title).replace(/^medley\s+/,'').trim();
+  if(!q) return null;
+  if(TITLE_ALIASES[q]) q=TITLE_ALIASES[q];
+  const qNoPar=normT((title||'').replace(/\([^)]*\)/g,' '));
+  const nA=normT(artist);
+  const pick=list=>{
+    if(!list.length) return null;
+    const byArtist=list.filter(x=>nA && (normT(x.song.a).includes(nA)||nA.includes(normT(x.song.a))));
+    const best=(byArtist.length?byArtist:list);
+    // Slide primeiro
+    best.sort((a,b)=>(a.song.cat==='Slide'?0:1)-(b.song.cat==='Slide'?0:1));
+    return {entry:best[0], artistOk:byArtist.length>0||!nA};
+  };
+  let r=pick(idx.filter(x=>(x.kind!=='part')&&(x.key===q||x.key===qNoPar)));
+  if(r) return {...r,how:'exact'};
+  if(strict) return null;
+  r=pick(idx.filter(x=>x.kind==='part'&&(x.key===q||x.key===qNoPar)));
+  if(r) return {...r,how:'medley'};
+  if(q.length>=6){
+    r=pick(idx.filter(x=>x.kind!=='part'&&x.key.length>=6&&similar(x.key,q)>=0.85));
+    if(r) return {...r,how:'fuzzy'};
+  }
+  return null;
+}
+
+// Ajustes manuais do admin (mover entre abas) — salvos neste navegador
+const OVERRIDE_KEY='lyricplay_admin_overrides';
+function loadOverrides(){try{return JSON.parse(localStorage.getItem(OVERRIDE_KEY)||'{}');}catch(e){return{};}}
+function saveOverrides(o){try{localStorage.setItem(OVERRIDE_KEY,JSON.stringify(o));}catch(e){}}
+
+let ADMIN_DATA={suggestions:[],ranking:[]};
+let ADMIN_TAB='pend';
+
+function buildRanking(suggestions){
+  const map={};
+  suggestions.forEach(s=>{
+    const m=s.musica||s.music||'';
+    const a=s.artista||s.artist||'';
+    if(!m.trim()) return;
+    const k=normT(m)+'||'+normT(a);
+    if(!map[k])map[k]={key:k,music:m,artist:a,count:0,lastDate:s.data||s.date||'',obs:[]};
+    map[k].count++;
+    const o=(s.observacao||s.obs||'').trim(); if(o&&!map[k].obs.includes(o)) map[k].obs.push(o);
+    const d=s.data||s.date||'';
+    if(parseBR(d)>parseBR(map[k].lastDate))map[k].lastDate=d;
+  });
+  const ov=loadOverrides();
+  return Object.values(map).map(r=>{
+    const match=findInCatalog(r.music,r.artist,false);
+    let have=!!match;
+    if(ov[r.key]==='have') have=true;
+    if(ov[r.key]==='pend') have=false;
+    return {...r,match,have,manual:!!ov[r.key]};
+  }).sort((a,b)=>b.count-a.count||parseBR(b.lastDate)-parseBR(a.lastDate));
+}
+// "dd/mm/aaaa hh:mm" → número comparável
+function parseBR(d){
+  const m=(d||'').match(/(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
+  return m?+(m[3]+m[2]+m[1]+(m[4]||'00')+(m[5]||'00')):0;
+}
+
 async function openAdmin(){
   document.getElementById('adminOverlay').classList.add('open');
   document.getElementById('adminRows').innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-weight:700">Carregando...</div>';
-
-  let suggestions=[];
   try{
-    const res = await fetch('https://sheetdb.io/api/v1/jcxpodjv92ltn');
-    suggestions = await res.json();
+    const res=await fetch('https://sheetdb.io/api/v1/jcxpodjv92ltn');
+    ADMIN_DATA.suggestions=await res.json();
   }catch(e){
     document.getElementById('adminRows').innerHTML='<div style="padding:20px;text-align:center;color:#f87171;font-weight:700">Erro ao carregar sugestões.</div>';
     return;
   }
+  ADMIN_DATA.ranking=buildRanking(ADMIN_DATA.suggestions);
+  renderAdmin();
+}
 
-  const map={};
-  function norm(s){return(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();}
-  suggestions.forEach(s=>{
-    const m=s.musica||s.music||'';
-    const a=s.artista||s.artist||'';
-    const k=norm(m)+'||'+norm(a);
-    if(!map[k])map[k]={music:m,artist:a,count:0,lastDate:s.data||s.date||'',obs:s.observacao||s.obs||''};
-    map[k].count++;
-    const d=s.data||s.date||'';
-    if(d>map[k].lastDate)map[k].lastDate=d;
-  });
-  const ranking=Object.values(map).sort((a,b)=>b.count-a.count);
-  const maxCount=ranking.length?ranking[0].count:1;
+function setAdminTab(t){ ADMIN_TAB=t; renderAdmin(); }
 
-  document.getElementById('adTotal').textContent=suggestions.length;
-  document.getElementById('adUniq').textContent=ranking.length;
-  document.getElementById('adTop').textContent=ranking.length?ranking[0].count:'—';
+function toggleRow(key){
+  const r=ADMIN_DATA.ranking.find(x=>x.key===key); if(!r) return;
+  const ov=loadOverrides();
+  const auto=!!r.match;
+  const target=r.have?'pend':'have';
+  if((target==='have')===auto) delete ov[key]; else ov[key]=target;
+  saveOverrides(ov);
+  ADMIN_DATA.ranking=buildRanking(ADMIN_DATA.suggestions);
+  renderAdmin();
+}
 
+function esc(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+function renderAdmin(){
+  const all=ADMIN_DATA.ranking;
+  const pend=all.filter(r=>!r.have), have=all.filter(r=>r.have);
+  const sum=l=>l.reduce((t,r)=>t+r.count,0);
+
+  document.getElementById('adTotal').textContent=ADMIN_DATA.suggestions.length;
+  document.getElementById('adPend').textContent=pend.length;
+  document.getElementById('adHave').textContent=have.length;
+  document.getElementById('tabPendN').textContent=pend.length;
+  document.getElementById('tabHaveN').textContent=have.length;
+  document.getElementById('tabPend').classList.toggle('active',ADMIN_TAB==='pend');
+  document.getElementById('tabHave').classList.toggle('active',ADMIN_TAB==='have');
+  document.getElementById('adHint').textContent = ADMIN_TAB==='pend'
+    ? `Músicas pedidas que ainda não estão no catálogo (${sum(pend)} pedidos). Ordenadas pelas mais pedidas.`
+    : `Músicas pedidas que já existem no catálogo Slide ou VS (${sum(have)} pedidos). Etiqueta amarela = confira (artista diferente, parte de medley ou nome parecido).`;
+
+  const q=normT(document.getElementById('adSearch').value);
+  let list=ADMIN_TAB==='pend'?pend:have;
+  if(q) list=list.filter(r=>normT(r.music+' '+r.artist).includes(q));
+  const maxCount=list.length?Math.max(...list.map(r=>r.count)):1;
   const rc=['gold','silver','bronze'];
+  const rowColor=c=>c>=maxCount&&c>1?'var(--orange)':c>1?'#ffb347':'var(--white)';
+  const rowBg=c=>c>=maxCount&&c>1?'rgba(242,99,26,.15)':c>1?'rgba(242,99,26,.07)':'transparent';
 
-  function rowColor(count){
-    if(count>=maxCount&&count>1) return 'var(--orange)';
-    if(count>1) return '#ffb347';
-    return 'var(--white)';
-  }
-  function rowBg(count){
-    if(count>=maxCount&&count>1) return 'rgba(242,99,26,.15)';
-    if(count>1) return 'rgba(242,99,26,.07)';
-    return 'transparent';
+  function tag(r){
+    if(!r.have) return r.manual?'<span class="match-tag warn">Movido manualmente para cá</span>':'';
+    if(!r.match) return '<span class="match-tag">Marcado manualmente como “já temos”</span>';
+    const s=r.match.entry.song;
+    const base=`${s.cat} #${s.n} — ${esc(s.t)} (${esc(s.a)})`;
+    if(r.match.how==='medley') return `<span class="match-tag warn">Dentro do medley: ${base}</span>`;
+    if(r.match.how==='fuzzy')  return `<span class="match-tag warn">Nome parecido: ${base}</span>`;
+    if(!r.match.artistOk)      return `<span class="match-tag warn">Artista diferente: ${base}</span>`;
+    return `<span class="match-tag">✓ ${base}</span>`;
   }
 
-  document.getElementById('adminRows').innerHTML=ranking.length
-    ?ranking.map((r,i)=>`
+  document.getElementById('adminRows').innerHTML=list.length
+    ?list.map((r,i)=>`
         <div class="admin-row" style="background:${rowBg(r.count)};border-bottom:1px solid rgba(255,255,255,.04)">
           <div class="admin-row-rank ${rc[i]||''}">${i+1}</div>
           <div class="admin-row-song">
-            <strong style="color:${rowColor(r.count)}">${r.music}</strong>
-            <small>${r.artist}${r.obs?' · '+r.obs:''}</small>
+            <strong style="color:${rowColor(r.count)}">${esc(r.music)}</strong>
+            <small>${esc(r.artist)}${r.obs.length?' · '+esc(r.obs.join(' | ')):''}</small>
+            ${tag(r)}
           </div>
-          <div class="admin-row-date">${r.lastDate}</div>
+          <div class="admin-row-date">${esc(r.lastDate)}</div>
           <div class="admin-row-count"><span class="count-pill" style="${r.count>1?'background:var(--orange);color:#fff':''}">${r.count}${r.count>1?' ★':''}</span></div>
+          <button class="move-btn" title="${r.have?'Mover para “Ainda não temos”':'Mover para “Já temos”'}" onclick="toggleRow('${r.key.replace(/'/g,"\\'")}')">⇄</button>
         </div>`).join('')
-    :'<div style="padding:20px;text-align:center;color:var(--muted);font-weight:700">Nenhuma sugestão ainda</div>';
+    :`<div style="padding:20px;text-align:center;color:var(--muted);font-weight:700">${q?'Nada encontrado com esse filtro':'Nenhuma sugestão nesta aba'}</div>`;
 }
-function closeAdmin(){document.getElementById('adminOverlay').classList.remove('open');}
-function adminOutside(e){if(e.target===document.getElementById('adminOverlay'))closeAdmin();}
+function closeAdmin() { document.getElementById('adminOverlay').classList.remove('open'); }
+function adminOutside(e) { if(e.target===document.getElementById('adminOverlay')) closeAdmin(); }
+
 async function downloadExcel(){
-  let suggestions=[];
-  try{
-    const res=await fetch('https://sheetdb.io/api/v1/jcxpodjv92ltn');
-    suggestions=await res.json();
-  }catch(e){alert('Erro ao buscar dados.');return;}
+  if(!ADMIN_DATA.suggestions.length){
+    try{
+      const res=await fetch('https://sheetdb.io/api/v1/jcxpodjv92ltn');
+      ADMIN_DATA.suggestions=await res.json();
+      ADMIN_DATA.ranking=buildRanking(ADMIN_DATA.suggestions);
+    }catch(e){alert('Erro ao buscar dados.');return;}
+  }
+  const rk=ADMIN_DATA.ranking;
+  const pend=rk.filter(r=>!r.have), have=rk.filter(r=>r.have);
+  const howTxt={exact:'Mesmo nome',medley:'Dentro de medley',fuzzy:'Nome parecido'};
 
-  const map={};
-  suggestions.forEach(s=>{
-    const k=((s.musica||s.music)+'||'+(s.artista||s.artist)).toUpperCase();
-    if(!map[k])map[k]={music:s.musica||s.music,artist:s.artista||s.artist,count:0,lastDate:s.data||s.date,obs:s.observacao||s.obs||''};
-    map[k].count++;
-    if((s.data||s.date)>map[k].lastDate)map[k].lastDate=s.data||s.date;
+  const r1=[['#','Música','Artista','Pedidos','Última Sugestão','Observações']];
+  pend.forEach((r,i)=>r1.push([i+1,r.music,r.artist,r.count,r.lastDate,r.obs.join(' | ')]));
+
+  const r2=[['#','Música sugerida','Artista sugerido','Pedidos','Catálogo','Nº','Título no catálogo','Artista no catálogo','Tipo de match','Última Sugestão']];
+  have.forEach((r,i)=>{
+    const s=r.match?r.match.entry.song:null;
+    let how=r.match?howTxt[r.match.how]:'Manual';
+    if(r.match&&r.match.how==='exact'&&!r.match.artistOk) how='Mesmo nome, artista diferente';
+    r2.push([i+1,r.music,r.artist,r.count,s?s.cat:'',s?s.n:'',s?s.t:'',s?s.a:'',how,r.lastDate]);
   });
-  const ranking=Object.values(map).sort((a,b)=>b.count-a.count);
 
-  const r1=[['#','Música','Artista','Votos','Última Sugestão','Observação']];
-  ranking.forEach((r,i)=>r1.push([i+1,r.music,r.artist,r.count,r.lastDate,r.obs||'']));
-  const r2=[['#','Música','Artista','Observação','Data']];
-  suggestions.forEach((s,i)=>r2.push([i+1,s.musica||s.music,s.artista||s.artist,s.observacao||s.obs||'',s.data||s.date]));
+  const r3=[['#','Música','Artista','Observação','Data','Situação']];
+  ADMIN_DATA.suggestions.forEach((s,i)=>{
+    const m=s.musica||s.music, a=s.artista||s.artist;
+    const r=rk.find(x=>x.key===normT(m)+'||'+normT(a));
+    r3.push([i+1,m,a,s.observacao||s.obs||'',s.data||s.date,r&&r.have?'Já temos':'Ainda não temos']);
+  });
 
   const wb=XLSX.utils.book_new();
-  const ws1=XLSX.utils.aoa_to_sheet(r1);ws1['!cols']=[{wch:5},{wch:40},{wch:30},{wch:8},{wch:20},{wch:30}];
-  const ws2=XLSX.utils.aoa_to_sheet(r2);ws2['!cols']=[{wch:5},{wch:40},{wch:30},{wch:30},{wch:20}];
-  XLSX.utils.book_append_sheet(wb,ws1,'Ranking');
-  XLSX.utils.book_append_sheet(wb,ws2,'Todas as Sugestões');
+  const ws1=XLSX.utils.aoa_to_sheet(r1);ws1['!cols']=[{wch:5},{wch:40},{wch:30},{wch:9},{wch:18},{wch:40}];
+  const ws2=XLSX.utils.aoa_to_sheet(r2);ws2['!cols']=[{wch:5},{wch:36},{wch:26},{wch:9},{wch:9},{wch:6},{wch:40},{wch:26},{wch:28},{wch:18}];
+  const ws3=XLSX.utils.aoa_to_sheet(r3);ws3['!cols']=[{wch:5},{wch:40},{wch:30},{wch:30},{wch:18},{wch:16}];
+  XLSX.utils.book_append_sheet(wb,ws1,'Ainda não temos');
+  XLSX.utils.book_append_sheet(wb,ws2,'Já temos');
+  XLSX.utils.book_append_sheet(wb,ws3,'Todas as Sugestões');
   const now=new Date().toLocaleDateString('pt-BR').replace(/\//g,'-');
   XLSX.writeFile(wb,`LyricPlay_Sugestoes_${now}.xlsx`);
 }
