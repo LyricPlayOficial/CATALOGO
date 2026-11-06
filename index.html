@@ -97,6 +97,7 @@ header{position:sticky;top:0;z-index:200;background:rgba(24,27,31,.97);backdrop-
 .card-num{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);border-radius:5px;padding:2px 9px;font-family:var(--cond);font-size:13px;font-weight:900;color:rgba(255,255,255,.95);line-height:1.4}
 .card.selected .card-num{background:var(--orange);color:#fff}
 .natal-badge{position:absolute;top:8px;right:36px;background:rgba(0,0,0,.7);border-radius:5px;padding:2px 7px;font-size:10px;font-weight:900;color:var(--orange);letter-spacing:.06em;text-transform:uppercase}
+.soon-tarja{position:absolute;top:50%;left:-10%;width:120%;transform:translateY(-50%) rotate(-6deg);background:var(--orange);color:#fff;text-align:center;padding:7px 0;font-family:var(--cond);font-weight:900;font-size:16px;letter-spacing:.1em;text-transform:uppercase;box-shadow:0 3px 14px rgba(0,0,0,.45);z-index:2;pointer-events:none}
 .card-sel{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.25);background:transparent;display:flex;align-items:center;justify-content:center;transition:all .16s}
 .card.selected .card-sel{background:var(--orange);border-color:var(--orange)}
 .card-sel svg{opacity:0;transition:opacity .16s}.card.selected .card-sel svg{opacity:1}
@@ -691,7 +692,7 @@ const songs=[
   {n:190,t:"GRAÇA",a:"REINO MUSIC"},
   {n:191,t:"QUEM É COMO NOSSO DEUS?",a:"NÍVEA SOARES"},
   {n:192,t:"ELE É O LEÃO",a:"REINO MUSIC"},
-  {n:193,t:"CANÇÃO DE SIMEÃO",a:"DROPS"},{n:194,t:"EU SÓ QUERO TUA PRESENÇA",a:"THEO RUBIA E MARCELO MARKES"},{n:195,t:"CANÇÃO DOS REDIMIDOS",a:"JULIA VITÓRIA E NÍVEA SOARES"},{n:196,t:"PALAVRAS",a:"VERSÃO CAROL BRAGA"},{n:197,t:"QUEM DIZES QUE EU SOU",a:"HILLSONG EM PORTUGUÊS"},{n:198,t:"LIVRE!",a:"MORADA"},{n:199,t:"ATÉ QUE ELE VENHA",a:"ALEXANDRE MAGNANI"},{n:200,t:"QUANDO ELE VEM",a:"ANDRÉ AQUINO"},{n:201,t:"DEIXA QUEIMAR",a:"ALESSANDRO VILAS BOAS / SOM DO REINO"},{n:202,t:"SOMOS UM",a:"SALZBAND"},{n:203,t:"A CRISTO SEJA A GLÓRIA",a:"JULLIANY SOUZA, GABRIELA ROCHA"},{n:204,t:"DONO DA MINHA AFEIÇÃO",a:"FHOP MUSIC"},{n:205,t:"HINO DA VITÓRIA",a:"VERSÃO JADSON MORENO"},{n:206,t:"ELE É DEUS",a:"GET WORSHIP"},{n:207,t:"CRISTO VENCEU",a:"(IPALPHA) NOVO CANTO"},{n:208,t:"OUSADO AMOR",a:"ISAIAS SAAD"},{n:209,t:"QUE ELE CRESÇA",a:"NÍVEA SOARES + NATHANAEL BRITO"},{n:210,t:"O FOGO NUNCA DORME",a:"VERSÃO JADSON MORENO"},{n:211,t:"NOSSO CORAÇÃO QUEIMA",a:"FHOP MUSIC"},{n:212,t:"DIANTE DA CRUZ",a:"VERSÃO COM CRISTO"},{n:213,t:"OS PLANOS DE DEUS",a:"SAMUEL MESSIAS"},{n:214,t:"TRIBUTO A IEHOVAH",a:"GABRIEL GUEDES"},{n:215,t:"LABAREDA",a:"JEFFERSON & SUELLEN"},{n:216,t:"NOME SOBRE TODO NOME",a:"REINO MUSIC"},{n:217,t:"CASTELO FORTE",a:"(IPALPHA) NOVO CANTO"},{n:218,t:"HOSANA",a:"GABRIELA ROCHA FEAT. LUKAS AGUSTINHO"},{n:219,t:"PORQUE ELE VIVE",a:"VERSÃO JADSON MORENO"},{n:220,t:"DERRAMO MEU PERFUME",a:"GET WORSHIP"},{n:221,t:"LEÃO",a:"GABRIELA ROCHA"},
+  {n:193,t:"CANÇÃO DE SIMEÃO",a:"DROPS"},{n:194,t:"EU SÓ QUERO TUA PRESENÇA",a:"THEO RUBIA E MARCELO MARKES"},{n:195,t:"CANÇÃO DOS REDIMIDOS",a:"JULIA VITÓRIA E NÍVEA SOARES"},{n:196,t:"PALAVRAS",a:"VERSÃO CAROL BRAGA"},{n:197,t:"QUEM DIZES QUE EU SOU",a:"HILLSONG EM PORTUGUÊS"},{n:198,t:"LIVRE!",a:"MORADA"},{n:199,t:"ATÉ QUE ELE VENHA",a:"ALEXANDRE MAGNANI"},{n:200,t:"QUANDO ELE VEM",a:"ANDRÉ AQUINO"},{n:201,t:"DEIXA QUEIMAR",a:"ALESSANDRO VILAS BOAS / SOM DO REINO"},{n:202,t:"SOMOS UM",a:"SALZBAND"},{n:203,t:"A CRISTO SEJA A GLÓRIA",a:"JULLIANY SOUZA, GABRIELA ROCHA"},{n:204,t:"DONO DA MINHA AFEIÇÃO",a:"FHOP MUSIC"},{n:205,t:"HINO DA VITÓRIA",a:"VERSÃO JADSON MORENO"},{n:206,t:"ELE É DEUS",a:"GET WORSHIP"},{n:207,t:"CRISTO VENCEU",a:"(IPALPHA) NOVO CANTO"},{n:208,t:"OUSADO AMOR",a:"ISAIAS SAAD"},{n:209,t:"QUE ELE CRESÇA",a:"NÍVEA SOARES + NATHANAEL BRITO"},{n:210,t:"O FOGO NUNCA DORME",a:"VERSÃO JADSON MORENO"},{n:211,t:"NOSSO CORAÇÃO QUEIMA",a:"FHOP MUSIC"},{n:212,t:"DIANTE DA CRUZ",a:"VERSÃO COM CRISTO"},{n:213,t:"OS PLANOS DE DEUS",a:"SAMUEL MESSIAS"},{n:214,t:"TRIBUTO A IEHOVAH",a:"GABRIEL GUEDES"},{n:215,t:"LABAREDA",a:"JEFFERSON & SUELLEN"},{n:216,t:"NOME SOBRE TODO NOME",a:"REINO MUSIC"},{n:217,t:"CASTELO FORTE",a:"(IPALPHA) NOVO CANTO"},{n:218,t:"HOSANA",a:"GABRIELA ROCHA FEAT. LUKAS AGUSTINHO"},{n:219,t:"PORQUE ELE VIVE",a:"VERSÃO JADSON MORENO"},{n:220,t:"DERRAMO MEU PERFUME",a:"GET WORSHIP"},{n:221,t:"LEÃO",a:"GABRIELA ROCHA",soon:true},
 ];
 const catalogSongs=songs.map(s=>({n:s.n,t:s.t,cat:'Catálogo'}));
 
@@ -729,13 +730,16 @@ function renderGrid(){
     const thumbClick='';
     const playOverlay='';
     const playBtn=hasLink?'<button class="preview-icon" onclick="event.stopPropagation();openVideo('+s.n+')" title="Ver prévia"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg></button>':'';
+    const soonTarja=s.soon?'<div class="soon-tarja">Em breve</div>':'';
     const th=covers[s.n]
       ?'<div class="card-thumb" '+thumbClick+'>'+
         '<img src="'+covers[s.n]+'" alt="'+s.t+'" loading="lazy">'+
         playOverlay+
+        soonTarja+
         '</div>'
       :'<div class="card-thumb-empty" '+thumbClick+'>'+
         '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="3" width="18" height="18" rx="3"/><polygon points="10,8 16,12 10,16"/></svg>'+
+        soonTarja+
         '</div>';
     const isSelected=sel.has(s.n);
     return '<div class="card'+(isSelected?' selected':'')+'" onclick="toggle('+s.n+')" data-n="'+s.n+'">'+
